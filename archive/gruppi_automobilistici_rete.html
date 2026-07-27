@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Rete proprietaria dei gruppi automobilistici — luglio 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<style>
+  :root{
+    --bg:#fff; --text:#1a1a1a; --muted:#6b6b66; --panel:#F1EFE8; --pline:#D3D1C7;
+    --line:#b4b2a9; --alli:#993C1D; --hist:#888780; --none:#B4B2A9;
+    --g-f:#FAECE7; --g-s:#993C1D; --g-t:#4A1B0C;
+    --h-f:#E1F5EE; --h-s:#0F6E56; --h-t:#04342C;
+    --b-f:#F1EFE8; --b-s:#5F5E5A; --b-t:#2C2C2A;
+    --i-f:#EEEDFE; --i-s:#534AB7; --i-t:#26215C;
+    --e-f:#FBEAF0; --e-s:#993556; --e-t:#4B1528;
+    --d-f:#F1EFE8; --d-s:#B4B2A9; --d-t:#5F5E5A;
+    --hi:#D85A30; --ok-f:#EAF3DE; --ok-t:#27500A; --wa-f:#FAEEDA; --wa-t:#633806;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#1c1c1a; --text:#f1efe8; --muted:#b4b2a9; --panel:#2C2C2A; --pline:#444441;
+      --line:#5f5e5a; --alli:#F0997B; --hist:#888780; --none:#5F5E5A;
+      --g-f:#4A1B0C; --g-s:#F0997B; --g-t:#F5C4B3;
+      --h-f:#04342C; --h-s:#5DCAA5; --h-t:#9FE1CB;
+      --b-f:#444441; --b-s:#B4B2A9; --b-t:#D3D1C7;
+      --i-f:#26215C; --i-s:#AFA9EC; --i-t:#CECBF6;
+      --e-f:#4B1528; --e-s:#ED93B1; --e-t:#F4C0D1;
+      --d-f:#2C2C2A; --d-s:#5F5E5A; --d-t:#888780;
+      --hi:#F0997B; --ok-f:#173404; --ok-t:#C0DD97; --wa-f:#412402; --wa-t:#FAC775;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:20px 16px 48px;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;line-height:1.5}
+  h1{font-size:20px;font-weight:500;margin:0 0 4px;text-align:center}
+  .sub{text-align:center;font-size:12.5px;color:var(--muted);margin:0 0 6px}
+  .stamp{text-align:center;font-size:11.5px;color:var(--muted);margin:0 0 16px}
+  .layout{max-width:1240px;margin:0 auto;display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+  .cv{flex:1 1 660px;min-width:320px;position:relative}
+  .zoom-ctrls{position:absolute;top:8px;right:8px;z-index:2;display:flex;flex-direction:column;gap:4px}
+  .zoom-ctrls button{width:28px;height:28px;border-radius:6px;border:0.5px solid var(--pline);
+    background:var(--panel);color:var(--text);font-size:15px;line-height:1;font-family:inherit;
+    cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .zoom-ctrls button:hover{color:var(--hi);border-color:var(--hi)}
+  .side{flex:0 0 300px;display:flex;flex-direction:column;gap:12px}
+  .card{background:var(--panel);border-radius:12px;padding:12px 14px;font-size:12px}
+  .card h3{font-size:12px;font-weight:500;margin:0 0 8px}
+  .row{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+  .dot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+  .es{width:22px;height:0;border-top-width:2px;flex-shrink:0}
+  .ctrl{display:flex;align-items:center;gap:7px;margin-bottom:6px;cursor:pointer;user-select:none}
+  .ctrl input{margin:0;cursor:pointer}
+  svg{width:100%;height:auto;display:block;touch-action:none}
+  .nl{font-size:9.5px;pointer-events:none}
+  .el{font-size:8px;fill:var(--muted);pointer-events:none}
+  #detail{min-height:190px}
+  #detail .dt{font-size:13px;font-weight:500;margin:0 0 7px;line-height:1.35}
+  #detail table{width:100%;border-collapse:collapse;font-size:11.5px}
+  #detail td{padding:3px 0;vertical-align:top}
+  #detail td.k{color:var(--muted);width:40%;padding-right:8px}
+  .tag{display:inline-block;padding:1px 7px;border-radius:9px;font-size:10px;margin-right:4px}
+  .t-prim{background:var(--ok-f);color:var(--ok-t)}
+  .t-sec{background:var(--wa-f);color:var(--wa-t)}
+  .divg{border-left:2px solid var(--hi);padding-left:8px;margin-top:8px;font-size:11px}
+  .hint{color:var(--muted);font-size:11.5px;font-style:italic}
+  .src{font-size:10.5px;color:var(--muted);margin-top:8px;padding-top:7px;border-top:1px solid var(--pline);word-break:break-word}
+  .src a{color:inherit}
+  .tl{font-size:11px;margin:0;padding:0;list-style:none}
+  .tl li{padding:4px 0;border-bottom:1px solid var(--pline);display:flex;gap:8px}
+  .tl li:last-child{border-bottom:none}
+  .tl .dd{color:var(--muted);flex:0 0 62px;font-variant-numeric:tabular-nums}
+  .note{font-size:11px;color:var(--muted);margin-top:9px;padding-top:8px;border-top:1px solid var(--pline)}
+  .sl{margin-bottom:11px}
+  .sl .lb{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+  .sl .lb span:last-child{color:var(--muted);font-size:10.5px;font-variant-numeric:tabular-nums}
+  .sl input[type=range]{width:100%;-webkit-appearance:none;appearance:none;background:transparent;margin:0;height:16px;cursor:pointer}
+  .sl input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:var(--pline)}
+  .sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--text);margin-top:-6px;border:none}
+  .sl input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:var(--pline)}
+  .sl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--text);border:none}
+  .rst{background:none;border:0.5px solid var(--pline);color:var(--muted);border-radius:6px;
+       padding:4px 10px;font-size:11px;font-family:inherit;cursor:pointer;width:100%;margin-top:2px}
+  .rst:hover{color:var(--text)}
+</style>
+</head>
+<body>
+
+<h1>Rete proprietaria dei gruppi automobilistici</h1>
+<p class="sub">Clicca un nodo o un arco per capitale, diritti di voto, data del dato e fonte</p>
+<p class="stamp">Dati verificati su fonti primarie, luglio 2026. Ogni arco dichiara se la fonte è un documento societario o la stampa.</p>
+<p class="stamp">Zoom con la rotellina o i pulsanti +/−, trascina lo sfondo per navigare (pan), doppio clic per zoomare su un punto.</p>
+
+<div class="layout">
+  <div class="cv">
+    <div class="zoom-ctrls">
+      <button id="z-in" title="Zoom avanti" type="button">+</button>
+      <button id="z-out" title="Zoom indietro" type="button">−</button>
+      <button id="z-rst" title="Reimposta vista" type="button">&#8634;</button>
+    </div>
+    <svg id="canvas" viewBox="0 0 900 860"></svg>
+  </div>
+  <div class="side">
+
+    <div class="card" id="detail">
+      <p class="dt">Dettaglio</p>
+      <p class="hint">Seleziona un nodo o un arco. Gli archi con alone arancione sono quelli dove il capitale e i diritti di voto divergono.</p>
+    </div>
+
+    <div class="card">
+      <h3>Filtri</h3>
+      <label class="ctrl"><input type="checkbox" id="f-inv" checked>Azionisti e investitori</label>
+      <label class="ctrl"><input type="checkbox" id="f-ext" checked>Entità esterne e partner</label>
+      <label class="ctrl"><input type="checkbox" id="f-hist" checked>Relazioni cessate o fallite</label>
+      <label class="ctrl"><input type="checkbox" id="f-lab">Etichette percentuali sugli archi</label>
+      <label class="ctrl"><input type="checkbox" id="f-divg">Solo archi con divergenza capitale/voto</label>
+      <label class="ctrl"><input type="checkbox" id="f-nq">Solo costruttori non quotati</label>
+    </div>
+
+    <div class="card">
+      <h3>Forze</h3>
+      <div class="sl">
+        <div class="lb"><span>Forza di centratura</span><span id="v-cen">0,30</span></div>
+        <input type="range" id="s-cen" min="0" max="1" step="0.02" value="0.30">
+      </div>
+      <div class="sl">
+        <div class="lb"><span>Forza di repulsione</span><span id="v-rep">1,00</span></div>
+        <input type="range" id="s-rep" min="0.1" max="2.5" step="0.05" value="1">
+      </div>
+      <div class="sl">
+        <div class="lb"><span>Forza collegamenti</span><span id="v-lnk">0,50</span></div>
+        <input type="range" id="s-lnk" min="0.05" max="1" step="0.05" value="0.5">
+      </div>
+      <div class="sl">
+        <div class="lb"><span>Distanza collegamenti</span><span id="v-dis">1,00</span></div>
+        <input type="range" id="s-dis" min="0.3" max="2.5" step="0.05" value="1">
+      </div>
+      <button class="rst" id="s-rst">Ripristina i valori predefiniti</button>
+    </div>
+
+    <div class="card">
+      <h3>Nodi</h3>
+      <div class="row"><span class="dot" style="background:var(--g-f);border:1.5px solid var(--g-s)"></span>Capogruppo</div>
+      <div class="row"><span class="dot" style="background:var(--h-f);border:1.5px solid var(--h-s)"></span>Holding o sub-holding</div>
+      <div class="row"><span class="dot" style="background:var(--b-f);border:1.5px solid var(--b-s)"></span>Marchio</div>
+      <div class="row"><span class="dot" style="background:var(--i-f);border:1.5px solid var(--i-s)"></span>Azionista</div>
+      <div class="row"><span class="dot" style="background:var(--e-f);border:1.5px solid var(--e-s)"></span>Entità esterna o partner</div>
+      <div class="row"><span class="dot" style="background:var(--d-f);border:1.5px dashed var(--d-s)"></span>Entità estinta o fallita</div>
+      <h3 style="margin-top:12px">Archi</h3>
+      <div class="row"><span class="es" style="border-top-style:solid;border-color:var(--line)"></span>Proprietà o controllo</div>
+      <div class="row"><span class="es" style="border-top-style:dashed;border-color:var(--alli)"></span>Minoranza, JV, alleanza</div>
+      <div class="row"><span class="es" style="border-top-style:dotted;border-color:var(--hist)"></span>Cessata o fallita</div>
+      <div class="note">L'alone arancione marca gli archi dove <em>capitale</em> e <em>diritti di voto</em> divergono. Rappresentarli con un solo numero sarebbe fuorviante.</div>
+    </div>
+
+    <div class="card">
+      <h3>Cronologia dei fatti verificati</h3>
+      <ul class="tl">
+        <li><span class="dd">gen 2021</span><span>PSA e FCA si estinguono nella fusione Stellantis</span></li>
+        <li><span class="dd">dic 2021</span><span>Daimler Truck scorporata; sciolto il cross-holding Daimler-Renault-Nissan</span></li>
+        <li><span class="dd">gen 2022</span><span>Iveco Group scorporata da CNH Industrial</span></li>
+        <li><span class="dd">feb 2022</span><span>BMW sale al 75% di BMW Brilliance</span></li>
+        <li><span class="dd">set 2022</span><span>IPO Porsche AG: solo privilegiate quotate</span></li>
+        <li><span class="dd">nov 2023</span><span>Trust francese: 28,4% di Nissan con voto neutralizzato</span></li>
+        <li><span class="dd">mar 2024</span><span>Mumtalakat raggiunge il controllo totale di McLaren Group</span></li>
+        <li><span class="dd">ott 2024</span><span>Navistar diventa International Motors</span></li>
+        <li><span class="dd">nov 2024</span><span>Nissan scende dal 34,07% al 24,05% di Mitsubishi</span></li>
+        <li><span class="dd">nov 2024</span><span>Northvolt in bancarotta; JV Rivian-VW operativa</span></li>
+        <li><span class="dd">dic 2024</span><span>Tavares lascia Stellantis; MoU Honda-Nissan</span></li>
+        <li><span class="dd">feb 2025</span><span>Fusione Honda-Nissan naufraga</span></li>
+        <li><span class="dd">mar 2025</span><span>Soglia di cross-holding dell'Alleanza dal 15% al 10%</span></li>
+        <li><span class="dd">giu 2025</span><span>Filosa CEO Stellantis a pieni poteri</span></li>
+        <li><span class="dd">lug 2025</span><span>Tata Motors annuncia l'acquisizione di Iveco Group</span></li>
+        <li><span class="dd">ott 2025</span><span>Golden Power italiano per l'acquisizione Tata-Iveco</span></li>
+        <li><span class="dd">3 gen 2026</span><span>Exor e famiglia Ferrari rinnovano l'accordo di consultazione</span></li>
+        <li><span class="dd">feb 2026</span><span>Mercedes annuncia la vendita parziale di Daimler Truck</span></li>
+        <li><span class="dd">24 apr 2026</span><span>Porsche cede le quote in Bugatti Rimac e Rimac Group</span></li>
+        <li><span class="dd">mag 2026</span><span>Piano FaSTLAne: nessun marchio Stellantis chiuso</span></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>Punti aperti</h3>
+      <div style="font-size:11.5px;line-height:1.55">
+        La riduzione di Nissan in Renault dal 15% al 10% resta un'intenzione dichiarata e non eseguita. La quota della Kuwait Investment Authority in Mercedes e la ripartizione Quandt in BMW non hanno un documento primario unico. La quota Geely in Aston Martin proviene dalla stampa, non da un filing. La quota Volkswagen in Traton (circa il 90%) e la quota di Mitsubishi Corporation in Mitsubishi Motors non sono confermate su fonte primaria in nessuna delle due ricerche. La quota di capitale della Bassa Sassonia in Volkswagen (circa 11,8%) resta una stima non ricontrollata puntualmente. La scomposizione capitale/voto di Exor e di Piero Ferrari in Ferrari (rispettivamente circa 21,3%/32,3% e 10,7%/16,2%) proviene da un'analisi di settore, non da un filing Exor o Ferrari. La ripartizione dei diritti di voto di AB Industrivarden e della sfera Wallenberg in AB Volvo non e stata confermata su fonte primaria. Lo stato di chiusura dell'acquisizione di Iveco Group da parte di Tata Motors e ambiguo tra le fonti consultate a luglio 2026: alcune la indicano gia conclusa, la maggioranza la indica ancora attesa nel terzo trimestre 2026. Il controllo totale di Tata Motors su Jaguar Land Rover dal 2008 e nota di settore consolidata, non riverificata su filing in questa sessione.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const N=[
+ {id:"Volkswagen Group",t:"g",d:"Volkswagen AG. Capitale sociale di 1.283.315.873,28 euro al 31 dicembre 2025, suddiviso in 295.089.818 azioni ordinarie votanti piu azioni privilegiate quotate senza diritto di voto. La struttura e piramidale: controllata nei voti da Porsche SE, controlla a sua volta Porsche AG e Traton."},
+ {id:"Stellantis",t:"g",d:"Stellantis N.V., diritto olandese. Nata dalla fusione paritaria PSA + FCA del gennaio 2021. Nessun azionista di maggioranza assoluta, ma il meccanismo delle loyalty voting shares concentra il potere di voto. Perdita netta FY2025 di circa 22,3 miliardi di euro dopo un reset da 22,2 miliardi annunciato il 6 febbraio 2026. Antonio Filosa e CEO dal 28 maggio 2025, con pieni poteri dal 23 giugno 2025, succeduto a Carlos Tavares, uscito nel dicembre 2024; John Elkann resta Executive Chairman."},
+ {id:"BMW Group",t:"g",d:"BMW AG. Controllo familiare Quandt/Klatten intorno al 46,7% combinato: minoranza qualificata sufficiente al controllo di fatto."},
+ {id:"Mercedes-Benz Group",t:"g",d:"Azionariato istituzionale internazionale. Due gruppi cinesi concorrenti, BAIC e Geely, sono entrambi azionisti rilevanti dello stesso costruttore."},
+ {id:"Renault Group",t:"g",d:"Dal novembre 2023 il rapporto con Nissan non e piu un controllo ma un'alleanza con voto cappato. Il 30 giugno 2025 Renault ha cambiato il trattamento contabile della quota Nissan (fair value through equity), con impatto non-cash di circa 9,3 miliardi e perdita di gruppo FY2025 di circa 10,9 miliardi."},
+ {id:"Ferrari",t:"g",d:"Ferrari N.V., diritto olandese, quotata a Milano e New York dal 2015 dopo lo scorporo da FCA. John Elkann e Executive Chairman anche di Ferrari, come di Stellantis: stesso ruolo, due gruppi distinti. Benedetto Vigna e CEO. Ricavi FY2025 di circa 7,146 miliardi di euro."},
+ {id:"Volvo Group",t:"g",d:"AB Volvo, capogruppo svedese di camion, autobus e macchine da costruzione. Da non confondere con Volvo Cars, il costruttore di automobili controllato da Geely: le due societa si sono separate nel 1999, quando Ford acquisto la divisione auto. Struttura a doppia classe azionaria, azioni A da un voto e azioni B da un decimo di voto, che concentra il potere decisionale rispetto al capitale."},
+ {id:"Iveco Group",t:"g",d:"Iveco Group N.V., costruttore di veicoli industriali, autobus e motori, scorporato da CNH Industrial nel gennaio 2022 con sede a Torino. Nel luglio 2025 Tata Motors ha annunciato l'acquisizione dell'intero gruppo: vedi l'arco con Tata Motors per lo stato della transazione."},
+
+ {id:"Porsche SE",t:"h",d:"Porsche Automobil Holding SE. Holding delle famiglie Porsche e Piech, che ne detengono il 100% delle azioni ordinarie. Entita distinta da Porsche AG il costruttore. Nodo della circolarita proprietaria del gruppo."},
+ {id:"Porsche AG",t:"h",d:"Dr. Ing. h.c. F. Porsche AG, quotata dal settembre 2022 (P911). Capitale diviso a meta tra ordinarie e privilegiate: solo le privilegiate sono quotate, quindi il pubblico detiene capitale senza voto."},
+ {id:"Traton",t:"h",d:"Traton SE, polo veicoli industriali pesanti di Volkswagen, quotato separatamente. Comprende MAN, Scania, International Motors, VW Truck & Bus e il marchio servizi RIO."},
+ {id:"SEAT S.A.",t:"h",d:"Societa spagnola controllata da Volkswagen, titolare di due marchi distinti: SEAT e CUPRA."},
+ {id:"PSA",t:"x",pt:"Stellantis",d:"Peugeot S.A. Entita estinta nella fusione del gennaio 2021: non esiste piu come societa autonoma o quotata. Rappresentata per tracciare la provenienza dei marchi: se nascosta dal filtro, i marchi Peugeot, Citroen, DS, Opel e Vauxhall si ricollegano visivamente a Stellantis."},
+ {id:"FCA",t:"x",pt:"Stellantis",d:"Fiat Chrysler Automobiles N.V. Entita estinta nella fusione del gennaio 2021. Rappresentata per tracciare la provenienza dei marchi: se nascosta dal filtro, i marchi Fiat, Alfa Romeo, Lancia, Maserati, Jeep, Ram, Dodge, Chrysler e Abarth si ricollegano visivamente a Stellantis."},
+ {id:"Geely",t:"h",d:"Zhejiang Geely Holding Group. Il nodo trasversale piu connesso del grafo: partecipazioni in Volvo Cars, smart, Mercedes-Benz, Aston Martin, Polestar, oltre a Lotus, Lynk & Co, LEVC e Proton."},
+ {id:"Exor",t:"h",d:"Holding della famiglia Agnelli. Primo azionista di Stellantis, con peso di voto nettamente superiore alla quota di capitale grazie alle loyalty shares."},
+ {id:"Yew Tree",t:"h",d:"Consorzio guidato da Lawrence Stroll, primo azionista di Aston Martin."},
+ {id:"McLaren Group",t:"h",d:"Holding britannica che controlla McLaren Automotive (supercar) e McLaren Racing (Formula 1). Di proprieta di Mumtalakat, fondo sovrano del Bahrein, azionista dal 2007 e proprietario totale dal marzo 2024."},
+ {id:"Rimac Group",t:"h",nq:1,d:"Societa croata fondata da Mate Rimac, produttrice della hypercar Rimac Nevera e fornitrice di tecnologia EV. Detiene la maggioranza della joint venture Bugatti Rimac."},
+ {id:"Tata Motors",t:"h",d:"Costruttore indiano del gruppo Tata. Controlla al 100% Jaguar Land Rover dal 2008 e ha in corso l'acquisizione di Iveco Group, annunciata nel luglio 2025."},
+
+ {id:"BMW",t:"b"},{id:"MINI",t:"b"},{id:"Rolls-Royce Motor Cars",t:"b"},{id:"BMW Motorrad",t:"b"},
+ {id:"Volkswagen",t:"b",d:"Include Volkswagen Nutzfahrzeuge, i veicoli commerciali leggeri (Transporter, Crafter, Caddy), che restano nel marchio core e non fanno parte di Traton."},
+ {id:"Audi",t:"b"},{id:"Skoda",t:"b"},{id:"SEAT",t:"b"},
+ {id:"CUPRA",t:"b",d:"Marchio di SEAT S.A., non entita giuridica separata. Autonomo commercialmente dal 2018."},
+ {id:"Bentley",t:"b"},{id:"Lamborghini",t:"b"},{id:"Ducati",t:"b"},
+ {id:"MAN",t:"b"},{id:"Scania",t:"b"},
+ {id:"International Motors",t:"b",d:"Ex Navistar. La ridenominazione in International Motors LLC e diventata effettiva il 1 ottobre 2024."},
+ {id:"VW Truck & Bus",t:"b",d:"Volkswagen Caminhoes e Onibus, veicoli pesanti per Brasile e America Latina. Da non confondere con i furgoni leggeri Volkswagen."},
+ {id:"RIO",t:"b",d:"Marchio servizi digitali di Traton."},
+ {id:"Peugeot",t:"b",d:"Marchio globale nel piano FaSTLAne 2030."},
+ {id:"Citroen",t:"b",d:"Marchio regionale nel piano FaSTLAne 2030."},
+ {id:"DS",t:"b",d:"Marchio specialty gestito sotto Citroen nel piano FaSTLAne 2030."},
+ {id:"Opel",t:"b",d:"Marchio regionale."},{id:"Vauxhall",t:"b"},
+ {id:"Fiat",t:"b",d:"Marchio globale nel piano FaSTLAne 2030."},
+ {id:"Alfa Romeo",t:"b",d:"Marchio regionale."},
+ {id:"Lancia",t:"b",d:"Marchio specialty gestito sotto Fiat nel piano FaSTLAne 2030. Non chiuso ne venduto."},
+ {id:"Maserati",t:"b",d:"Mantenuto come marchio di lusso puro, con due nuovi modelli di segmento E. Roadmap dettagliata attesa a dicembre 2026."},
+ {id:"Jeep",t:"b",d:"Marchio globale."},{id:"Ram",t:"b",d:"Marchio globale."},
+ {id:"Dodge",t:"b",d:"Marchio regionale."},{id:"Chrysler",t:"b",d:"Marchio regionale."},{id:"Abarth",t:"b"},
+ {id:"Mercedes-Benz",t:"b"},
+ {id:"AMG",t:"b",d:"Mercedes-AMG GmbH, divisione interna. Non una partecipazione azionaria separata."},
+ {id:"Maybach",t:"b",d:"Linea di allestimento top di gamma, non entita separata."},
+ {id:"smart",t:"b",d:"smart Automobile Co., Ltd., costituita nel 2019 con sede a Ningbo."},
+ {id:"Renault",t:"b"},{id:"Dacia",t:"b"},{id:"Alpine",t:"b"},{id:"Mobilize",t:"b"},{id:"Ampere",t:"b"},
+ {id:"Volvo Trucks",t:"b"},{id:"Mack Trucks",t:"b",d:"Marchio statunitense, parte di Volvo Group dal 2000."},{id:"Volvo Buses",t:"b"},
+ {id:"Renault Trucks",t:"b",d:"Ex divisione veicoli industriali di Renault (RVI), venduta a Volvo Group nel 2001. Il marchio conserva il nome Renault ma non ha piu alcun legame azionario con Renault Group."},
+ {id:"Iveco",t:"b",d:"Marchio camion e furgoni di Iveco Group."},{id:"IVECO Bus",t:"b"},{id:"FPT Industrial",t:"b",d:"Motori e propulsori, incluse le soluzioni a zero emissioni."},
+ {id:"McLaren Automotive",t:"b",nq:1,d:"Costruttore britannico di supercar, controllato al 100% da McLaren Group."},
+ {id:"Jaguar",t:"b"},{id:"Land Rover",t:"b"},
+
+ {id:"Bassa Sassonia",t:"i",d:"Land tedesco. Oltre alla quota di voto dispone di poteri di blocco sanciti dalla Volkswagen-Gesetz, che fissa la soglia di minoranza di blocco al 20% anziche al consueto 25% del diritto azionario tedesco."},
+ {id:"Qatar Holding",t:"i",d:"Qatar Holding LLC, terzo azionista di Volkswagen per diritti di voto."},
+ {id:"Famiglie Porsche e Piech",t:"i",d:"Detengono il 100% delle azioni ordinarie di Porsche SE, quindi la radice ultima del controllo sull'intero gruppo Volkswagen."},
+ {id:"Stefan Quandt",t:"i",d:"Detiene la quota tramite AQTON."},
+ {id:"Susanne Klatten",t:"i"},
+ {id:"BAIC Group",t:"i",d:"Gruppo di Pechino, maggior azionista singolo di Mercedes-Benz per diritti di voto. Presente anche come partner industriale in Cina."},
+ {id:"Kuwait Investment Authority",t:"i",d:"Il piu longevo azionista sovrano di Mercedes, presente dal 1974. Quota ridotta nel marzo 2023."},
+ {id:"EPF Peugeot",t:"i",d:"Etablissements Peugeot Freres, tramite Peugeot Invest e Peugeot 1810."},
+ {id:"Bpifrance",t:"i",d:"Banca pubblica d'investimento francese, quindi presenza indiretta dello Stato francese in Stellantis."},
+ {id:"Dongfeng",t:"i",d:"Gruppo cinese, un tempo azionista rilevante di PSA, oggi ridotto a una presenza marginale."},
+ {id:"FAW",t:"i",d:"Gruppo automobilistico cinese, entrato nel capitale di Leapmotor nel 2025."},
+ {id:"Piero Ferrari",t:"i",d:"Figlio del fondatore, secondo azionista di Ferrari tramite un trust dedicato. Accordo di consultazione con Exor rinnovato il 3 gennaio 2026 per un triennio, con diritto di uscita unilaterale di Ferrari su 30 giorni di preavviso."},
+ {id:"AB Industrivarden",t:"i",d:"Holding di investimento svedese, tra i maggiori azionisti di AB Volvo. La ripartizione precisa tra capitale e diritti di voto nella struttura a doppia classe non e stata confermata su fonte primaria in questa ricerca."},
+ {id:"Mumtalakat",t:"i",d:"Mumtalakat Holding Company, fondo sovrano del Regno del Bahrein."},
+ {id:"CYVN Holdings",t:"i",d:"Fondo di investimento di Abu Dhabi, azionista anche di NIO."},
+
+ {id:"Nissan",t:"e"},
+ {id:"Mitsubishi Motors",t:"e",d:"La quota residua di Mitsubishi Corporation e di altre societa del gruppo Mitsubishi nel costruttore non e quantificata con precisione su fonte primaria in nessuna delle due ricerche."},
+ {id:"Mitsubishi Corporation",t:"i",d:"Trading house del gruppo Mitsubishi, entita distinta dal costruttore Mitsubishi Motors. Azionista rilevante, ma con quota non quantificata su fonte primaria in questa ricerca."},
+ {id:"Leapmotor",t:"e"},{id:"Leapmotor International",t:"e",d:"Joint venture per la distribuzione fuori dalla Cina."},
+ {id:"Volvo Cars",t:"e"},{id:"Lotus",t:"e"},{id:"Polestar",t:"e"},{id:"Aston Martin",t:"e"},
+ {id:"Daimler Truck",t:"e",d:"Scorporata da Daimler nel dicembre 2021, oggi quotata autonomamente."},
+ {id:"BMW Brilliance",t:"e",d:"Joint venture cinese."},
+ {id:"Rivian",t:"e",d:"Costruttore statunitense di veicoli elettrici. Volkswagen ne e diventato il primo azionista, scalzando Amazon."},
+ {id:"Rivian VW Technologies",t:"e",d:"Joint venture su architettura elettrica e software, formalizzata nel novembre 2024. Impegno Volkswagen fino a 5,8 miliardi di dollari entro il 2027."},
+ {id:"Lyten",t:"e",d:"Societa statunitense di batterie litio-zolfo, acquirente degli asset Northvolt."},
+ {id:"General Motors",t:"e"},
+ {id:"Honda",t:"e"},
+ {id:"Rolls-Royce Holdings plc",t:"e",d:"Motori aeronautici, aerospaziale e difesa. Societa quotata del tutto indipendente: nessun legame azionario con l'automobile."},
+ {id:"Northvolt",t:"x",d:"Produttore svedese di batterie. Bancarotta negli Stati Uniti nel novembre 2024 e in Svezia nel marzo 2025. Volkswagen ne deteneva circa il 21%, Goldman Sachs circa il 19%."},
+ {id:"Bugatti Rimac",t:"e",nq:1,d:"Joint venture per il marchio Bugatti, costituita nel 2021 da Porsche AG e Rimac Group. Porsche ha venduto la propria quota nell'aprile 2026: vedi l'arco storico con Porsche AG."},
+ {id:"McLaren Racing",t:"e",d:"Team di Formula 1, con governance separata da McLaren Automotive. Gli azionisti minoritari MSP Sports Capital sono stati acquistati nel settembre 2025 da Mumtalakat e CYVN Holdings."},
+ {id:"Jaguar Land Rover",t:"e",d:"JLR, controllata al 100% di Tata Motors dal 2008, quando Tata rilevo i marchi Jaguar e Land Rover da Ford."},
+
+ {id:"Toyota",t:"e",d:"Toyota Motor Corporation, primo costruttore mondiale per volumi. Nel grafo compare come partner industriale, non come proprietario: coopera con BMW e con Stellantis senza alcuna partecipazione azionaria in gruppi europei."},
+ {id:"Ford",t:"e",d:"Ford Motor Company, costruttore statunitense. Alleato di Volkswagen su piattaforma elettrica e pickup, senza scambio azionario. In passato proprietario di Jaguar, Land Rover, Volvo Cars e Aston Martin, tutti poi ceduti."},
+ {id:"Xpeng",t:"e",d:"XPeng Inc., costruttore cinese di veicoli elettrici. Volkswagen ne detiene una quota di minoranza dal 2023 per co-sviluppare piattaforme elettriche destinate al mercato cinese."},
+ {id:"Hyundai Motor Group",t:"e",d:"Gruppo automobilistico sudcoreano, proprietario dei marchi Hyundai e Kia. Nel grafo compare come investitore di minoranza in Rimac Group, non come costruttore concorrente."},
+ {id:"CNH Industrial",t:"e",d:"CNH Industrial N.V., macchine agricole e da costruzione (marchi Case IH e New Holland). Controllata di fatto da Exor, la holding degli Agnelli. Iveco Group ne e stata scorporata nel gennaio 2022. Inclusa per mostrare l'altra gamba industriale del gruppo Exor accanto a Stellantis, Ferrari e Iveco."},
+
+ {id:"Pagani",t:"e",nq:1,d:"Pagani Automobili S.p.A., costruttore italiano di hypercar a San Cesario sul Panaro (Modena). Interamente controllato dal fondatore Horacio Pagani e dalla famiglia: nessun azionista esterno."},
+ {id:"Koenigsegg",t:"e",nq:1,d:"Koenigsegg Automotive AB, costruttore svedese di hypercar ad Angelholm. Controllo di maggioranza del fondatore Christian von Koenigsegg. La partnership del 2019 con NEVS, gruppo Evergrande, e di fatto decaduta con il crollo di Evergrande."},
+ {id:"Ineos Automotive",t:"e",nq:1,d:"Costruttore britannico del fuoristrada Grenadier, divisione del gruppo chimico INEOS di Jim Ratcliffe. Produce nello stabilimento di Hambach, in Francia, rilevato da Mercedes-Benz nel 2020."},
+ {id:"Automobili Pininfarina",t:"e",nq:1,d:"Costruttore di hyper-EV con sede a Monaco di Baviera (modello Battista), controllato dal gruppo indiano Mahindra. Da non confondere con la casa di design Pininfarina S.p.A., anch'essa a controllo Mahindra."},
+ {id:"Morgan",t:"e",nq:1,d:"Morgan Motor Company, storico costruttore artigianale britannico di Malvern. Maggioranza rilevata dal fondo di private equity italiano Investindustrial nel 2019; la famiglia Morgan e i dipendenti conservano una quota di minoranza."},
+
+ {id:"Horacio Pagani",t:"i",d:"Fondatore e proprietario di Pagani Automobili."},
+ {id:"Christian von Koenigsegg",t:"i",d:"Fondatore e azionista di maggioranza di Koenigsegg."},
+ {id:"INEOS",t:"h",d:"Gruppo chimico britannico di Sir Jim Ratcliffe. Controlla la divisione automobilistica Ineos Automotive; Ratcliffe e attivo anche in Formula 1 (Mercedes-AMG F1) e nel calcio (Manchester United)."},
+ {id:"Mahindra",t:"h",d:"Mahindra & Mahindra Ltd., conglomerato indiano. Controlla Automobili Pininfarina e la maggioranza della casa di design Pininfarina S.p.A., rilevata nel 2015-2016."},
+ {id:"Investindustrial",t:"h",d:"Fondo di private equity italiano fondato da Andrea Bonomi. Controlla Morgan dal 2019. In passato azionista di riferimento di Aston Martin (2013-2020), poi uscito con l'arrivo del consorzio Yew Tree di Lawrence Stroll."},
+ {id:"NEVS",t:"x",d:"National Electric Vehicle Sweden, controllata dal gruppo cinese Evergrande. Nel 2019 acquisi una quota del 20% in Koenigsegg. Ha di fatto cessato le attivita tra il 2022 e il 2024 con il crollo di Evergrande."},
+
+ {id:"Saudi PIF",t:"i",d:"Public Investment Fund, fondo sovrano dell'Arabia Saudita. Secondo maggiore azionista di Aston Martin dal 2022, con seggi nel consiglio."}
+];
+
+const P="primaria", S="secondaria";
+
+const L=[
+ {s:"Famiglie Porsche e Piech",tg:"Porsche SE",k:"ctrl",cap:"100% ordinarie",dt:"2025",st:P,
+  src:"Porsche SE, Investor Relations",
+  n:"Radice ultima del controllo sull'intero gruppo Volkswagen. Le famiglie controllano la totalita delle ordinarie della holding, che a sua volta controlla i voti di Volkswagen AG."},
+ {s:"Porsche SE",tg:"Volkswagen Group",k:"ctrl",cap:"31,9%",vot:"53,3%",dt:"31 dic 2025",st:P,
+  src:"Volkswagen Group, Annual Report 2025, Shareholder structure",
+  url:"https://annualreport2025.volkswagen-group.com/group-management-report/shares-and-bonds/shareholder-structure.html",
+  n:"Maggioranza dei voti con minoranza del capitale. La divergenza deriva dalla divisione del capitale Volkswagen tra 295.089.818 azioni ordinarie votanti e azioni privilegiate quotate prive di diritto di voto: Porsche SE concentra la presa sulle ordinarie."},
+ {s:"Bassa Sassonia",tg:"Volkswagen Group",k:"min",cap:"~11,8%",vot:"20,0%",dt:"31 dic 2025",st:P,
+  src:"Volkswagen Group, Annual Report 2025, Shareholder structure",
+  url:"https://annualreport2025.volkswagen-group.com/group-management-report/shares-and-bonds/shareholder-structure.html",
+  n:"Minoranza con potere di veto. La Volkswagen-Gesetz fissa la soglia di blocco al 20% dei voti anziche al consueto 25%, calibrata esattamente sulla quota del Land: il veto e quindi strutturale e non contingente. Il dato di capitale (circa 11,8%) e una stima non ricontrollata puntualmente su fonte primaria: da riverificare sul bilancio Volkswagen se necessario nel grafo."},
+ {s:"Qatar Holding",tg:"Volkswagen Group",k:"min",vot:"17,0%",dt:"31 dic 2025",st:P,
+  src:"Volkswagen Group, Annual Report 2025, Shareholder structure",
+  url:"https://annualreport2025.volkswagen-group.com/group-management-report/shares-and-bonds/shareholder-structure.html",
+  n:"Terzo azionista per diritti di voto. Il flottante sulle ordinarie e pari al 9,7%: la quasi totalita del capitale ordinario e in mani stabili."},
+ {s:"Volkswagen Group",tg:"Porsche AG",k:"ctrl",cap:"75% meno 1 azione ordinaria",dt:"2025",st:P,
+  src:"Porsche AG, Investor Relations, Shareholder structure",
+  url:"https://investorrelations.porsche.com/en/the-share/shareholder-structure",
+  n:"Detenuta indirettamente tramite Porsche Holding Stuttgart GmbH. Le azioni privilegiate quotate a Francoforte non conferiscono voto, quindi il pubblico detiene capitale senza potere decisionale."},
+ {s:"Porsche SE",tg:"Porsche AG",k:"min",cap:"25% piu 1 azione ordinaria",dt:"2025",st:P,
+  src:"Porsche AG, Investor Relations, Shareholder structure",
+  url:"https://investorrelations.porsche.com/en/the-share/shareholder-structure",
+  n:"Minoranza di blocco diretta, che si somma al controllo indiretto esercitato via Volkswagen. Porsche SE raggiunge lo stesso asset per due vie distinte: e la circolarita che rende il gruppo non riducibile a un albero."},
+ {s:"Volkswagen Group",tg:"Traton",k:"ctrl",cap:"~90%",dt:"2025",st:S,
+  src:"Stima priva di conferma su fonte primaria diretta; da verificare sull'ultimo Annual Report Traton",
+  n:"La quota puntuale (circa il 90% del capitale, resto flottante) non e stata riconfermata su fonte primaria diretta in questa ricerca: da verificare sull'ultimo Annual Report Traton prima di un uso definitivo nel grafo."},
+ {s:"Traton",tg:"MAN",k:"own",cap:"100%",dt:"2025",st:P,src:"Traton SE, Annual Report"},
+ {s:"Traton",tg:"Scania",k:"own",cap:"100%",dt:"2025",st:P,src:"Traton SE, Annual Report"},
+ {s:"Traton",tg:"International Motors",k:"own",cap:"100%",dt:"1 ott 2024",st:P,
+  src:"Transport Topics, Navistar to rebrand as International Motors",
+  url:"https://www.ttnews.com/articles/navistar-rebrand-intl",
+  n:"La ridenominazione da Navistar a International Motors LLC e diventata effettiva il 1 ottobre 2024."},
+ {s:"Traton",tg:"VW Truck & Bus",k:"own",cap:"100%",dt:"2025",st:P,src:"Traton SE, Annual Report"},
+ {s:"Traton",tg:"RIO",k:"own",cap:"100%",dt:"2025",st:P,src:"Traton SE, Annual Report"},
+ {s:"Volkswagen Group",tg:"Volkswagen",k:"own",cap:"100%",dt:"2025",st:P,src:"Volkswagen Group, Annual Report 2025",
+  n:"Include Volkswagen Nutzfahrzeuge. I furgoni leggeri restano nel marchio core e non fanno parte di Traton: e l'errore di modellazione piu frequente su questo gruppo."},
+ {s:"Volkswagen Group",tg:"Audi",k:"own",cap:"100%",dt:"2025",st:P,src:"Volkswagen Group, Annual Report 2025"},
+ {s:"Volkswagen Group",tg:"Skoda",k:"own",cap:"100%",dt:"2025",st:P,src:"Volkswagen Group, Annual Report 2025"},
+ {s:"Volkswagen Group",tg:"SEAT S.A.",k:"own",cap:"100%",dt:"2025",st:P,src:"Volkswagen Group, Annual Report 2025"},
+ {s:"SEAT S.A.",tg:"SEAT",k:"brand",dt:"2025",st:P,src:"Volkswagen Group, Annual Report 2025",n:"Marchio, non partecipazione azionaria."},
+ {s:"SEAT S.A.",tg:"CUPRA",k:"brand",dt:"2025",st:P,src:"Volkswagen Group, Annual Report 2025",
+  n:"Marchio di SEAT S.A. scorporato commercialmente nel 2018, non entita giuridica separata."},
+ {s:"Volkswagen Group",tg:"Bentley",k:"own",cap:"100%",dt:"2025",st:P,src:"Volkswagen Group, Annual Report 2025"},
+ {s:"Audi",tg:"Lamborghini",k:"own",cap:"100%",dt:"2025",st:P,src:"Volkswagen Group, Annual Report 2025"},
+ {s:"Audi",tg:"Ducati",k:"own",cap:"100%",dt:"2025",st:P,src:"Volkswagen Group, Annual Report 2025",
+  n:"Di proprieta tramite Audi, non direttamente Volkswagen AG."},
+ {s:"Volkswagen Group",tg:"Rivian",k:"min",cap:"15,9%",dt:"2025",st:S,
+  src:"Yahoo Finance, Volkswagen becomes Rivian's top shareholder, displacing Amazon",
+  url:"https://finance.yahoo.com/markets/stocks/articles/volkswagen-becomes-rivian-top-shareholder-195857982.html",
+  n:"Cresciuta dall'8,6% iniziale. Volkswagen e diventato primo azionista di Rivian scalzando Amazon."},
+ {s:"Volkswagen Group",tg:"Rivian VW Technologies",k:"jv",cap:"50%",dt:"12 nov 2024",st:P,
+  src:"Volkswagen Group, comunicato sul lancio della joint venture con Rivian",
+  url:"https://www.volkswagen-group.com/en/press-releases/faster-leaner-more-efficient-rivian-and-volkswagen-group-announce-the-launch-of-their-joint-venture-18828",
+  n:"Joint venture paritaria su architettura elettrica e software. Impegno Volkswagen fino a 5,8 miliardi di dollari entro il 2027."},
+ {s:"Rivian",tg:"Rivian VW Technologies",k:"jv",cap:"50%",dt:"12 nov 2024",st:P,
+  src:"Volkswagen Group, comunicato sul lancio della joint venture con Rivian",
+  url:"https://www.volkswagen-group.com/en/press-releases/faster-leaner-more-efficient-rivian-and-volkswagen-group-announce-the-launch-of-their-joint-venture-18828"},
+ {s:"Volkswagen Group",tg:"Northvolt",k:"hist",cap:"~21%",dt:"nov 2024 / mar 2025",st:S,
+  src:"Reuters via AOL, US startup seeks to recharge Europe's fallen battery icon Northvolt",
+  url:"https://www.aol.com/news/factbox-us-startup-seeks-recharge-153912212.html",
+  n:"Northvolt e fallita: bancarotta negli Stati Uniti nel novembre 2024 e in Svezia nel marzo 2025. Goldman Sachs deteneva circa il 19%. Gli asset sono passati a Lyten."},
+ {s:"Northvolt",tg:"Lyten",k:"hist",dt:"2025-2026",st:S,
+  src:"Yahoo Finance, Lyten acquires Northvolt Swedish battery assets",
+  url:"https://finance.yahoo.com/news/lyten-acquires-northvolt-swedish-battery-173427103.html",
+  n:"Lyten ha rilevato gli asset Northvolt. Scania, controllata Traton, ha rilevato la divisione industriale Northvolt Systems."},
+ {s:"Stellantis",tg:"Lyten",k:"min",dt:"2025-2026",st:S,
+  src:"Yahoo Finance, Lyten acquires Northvolt Swedish battery assets",
+  url:"https://finance.yahoo.com/news/lyten-acquires-northvolt-swedish-battery-173427103.html",
+  n:"Stellantis e tra i partecipanti al capitale di Lyten. Ne risulta un arco indiretto tra Stellantis e gli ex asset Northvolt, in cui Volkswagen aveva investito."},
+
+ {s:"Exor",tg:"Stellantis",k:"min",cap:"15,48%",vot:"23,84%",dt:"25 feb 2026",st:P,
+  src:"Stellantis N.V., Annual Report e Form 20-F al 31 dicembre 2025",
+  url:"https://www.stellantis.com/content/dam/stellantis-corporate/investors/financial-reports/Stellantis-NV-20251231-Annual-Report-and-Form-20-F.pdf",
+  n:"449.410.092 azioni ordinarie piu altrettante special voting shares di classe A. Il meccanismo di loyalty voting attribuisce voto aggiuntivo dopo tre anni di detenzione continuativa registrata: il controllo di fatto si esercita quindi senza maggioranza del capitale."},
+ {s:"EPF Peugeot",tg:"Stellantis",k:"min",cap:"7,72%",vot:"11,89%",dt:"25 feb 2026",st:P,
+  src:"Stellantis N.V., Annual Report e Form 20-F al 31 dicembre 2025",
+  url:"https://www.stellantis.com/content/dam/stellantis-corporate/investors/financial-reports/Stellantis-NV-20251231-Annual-Report-and-Form-20-F.pdf",
+  n:"Detenuta tramite Peugeot Invest e Peugeot 1810."},
+ {s:"Bpifrance",tg:"Stellantis",k:"min",cap:"6,64%",vot:"10,22%",dt:"25 feb 2026",st:P,
+  src:"Stellantis N.V., Annual Report e Form 20-F al 31 dicembre 2025",
+  url:"https://www.stellantis.com/content/dam/stellantis-corporate/investors/financial-reports/Stellantis-NV-20251231-Annual-Report-and-Form-20-F.pdf",
+  n:"Presenza indiretta dello Stato francese nel capitale di Stellantis."},
+ {s:"Dongfeng",tg:"Stellantis",k:"min",cap:"poco piu dell'1%",dt:"2026",st:S,
+  src:"Stampa finanziaria; quota ridotta progressivamente dal 2020",
+  n:"Era all'1,58% dopo il buyback del novembre 2023. La presenza cinese in Stellantis si e quindi quasi azzerata, in controtendenza rispetto a Mercedes."},
+ {s:"Stellantis",tg:"PSA",k:"hist",dt:"gen 2021",st:P,
+  src:"Stellantis N.V., documenti di fusione",
+  n:"Entita estinta e assorbita nella fusione. Non esiste piu come societa autonoma o quotata."},
+ {s:"Stellantis",tg:"FCA",k:"hist",dt:"gen 2021",st:P,
+  src:"Stellantis N.V., documenti di fusione",n:"Entita estinta e assorbita nella fusione."},
+ {s:"PSA",tg:"Peugeot",k:"own",cap:"100%",dt:"2026",st:P,src:"Stellantis N.V., Annual Report 2025"},
+ {s:"PSA",tg:"Citroen",k:"own",cap:"100%",dt:"2026",st:P,src:"Stellantis N.V., Annual Report 2025"},
+ {s:"PSA",tg:"DS",k:"own",cap:"100%",dt:"2026",st:P,src:"Stellantis N.V., Annual Report 2025"},
+ {s:"PSA",tg:"Opel",k:"own",cap:"100%",dt:"2026",st:P,src:"Stellantis N.V., Annual Report 2025"},
+ {s:"PSA",tg:"Vauxhall",k:"own",cap:"100%",dt:"2026",st:P,src:"Stellantis N.V., Annual Report 2025"},
+ {s:"General Motors",tg:"Opel",k:"hist",dt:"fino al 2017",st:S,src:"Stampa finanziaria",
+  n:"Proprietaria fino al 2017, quando ha ceduto Opel e Vauxhall a PSA."},
+ {s:"General Motors",tg:"Vauxhall",k:"hist",dt:"fino al 2017",st:S,src:"Stampa finanziaria"},
+ {s:"FCA",tg:"Fiat",k:"own",cap:"100%",dt:"2026",st:P,src:"Stellantis N.V., Annual Report 2025"},
+ {s:"FCA",tg:"Alfa Romeo",k:"own",cap:"100%",dt:"2026",st:P,src:"Stellantis N.V., Annual Report 2025"},
+ {s:"FCA",tg:"Lancia",k:"own",cap:"100%",dt:"2026",st:P,src:"Stellantis N.V., Annual Report 2025"},
+ {s:"FCA",tg:"Maserati",k:"own",cap:"100%",dt:"2026",st:P,src:"Stellantis N.V., Annual Report 2025"},
+ {s:"FCA",tg:"Jeep",k:"own",cap:"100%",dt:"2026",st:P,src:"Stellantis N.V., Annual Report 2025"},
+ {s:"FCA",tg:"Ram",k:"own",cap:"100%",dt:"2026",st:P,src:"Stellantis N.V., Annual Report 2025"},
+ {s:"FCA",tg:"Dodge",k:"own",cap:"100%",dt:"2026",st:P,src:"Stellantis N.V., Annual Report 2025"},
+ {s:"FCA",tg:"Chrysler",k:"own",cap:"100%",dt:"2026",st:P,src:"Stellantis N.V., Annual Report 2025"},
+ {s:"FCA",tg:"Abarth",k:"own",cap:"100%",dt:"2026",st:P,src:"Stellantis N.V., Annual Report 2025"},
+ {s:"Stellantis",tg:"Leapmotor",k:"min",cap:"~21%",dt:"2026",st:P,
+  src:"Stellantis, comunicato del maggio 2026 sull'evoluzione della partnership con Leapmotor",
+  url:"https://www.stellantis.com/en/news/press-releases/2026/may/stellantis-and-leapmotor-announce-their-intention-to-take-their-strategic-partnership-to-the-next-level",
+  n:"Acquisizione iniziale di circa il 20% per 1,5 miliardi di euro nell'ottobre 2023. Partecipazione di minoranza, non un marchio di proprieta."},
+ {s:"FAW",tg:"Leapmotor",k:"min",cap:"5%",dt:"2025",st:S,src:"Stampa finanziaria",
+  n:"Acquisita per 3,74 miliardi di renminbi."},
+ {s:"Stellantis",tg:"Leapmotor International",k:"jv",cap:"51%",dt:"2026",st:P,
+  src:"Stellantis, comunicato sulla joint venture Leapmotor International",
+  url:"https://www.stellantis.com/en/news/press-releases/2026/may/stellantis-and-leapmotor-announce-their-intention-to-take-their-strategic-partnership-to-the-next-level",
+  n:"Joint venture a controllo Stellantis per la distribuzione fuori dalla Cina."},
+ {s:"Leapmotor",tg:"Leapmotor International",k:"jv",cap:"49%",dt:"2026",st:P,
+  src:"Stellantis, comunicato sulla joint venture Leapmotor International"},
+
+ {s:"BAIC Group",tg:"Mercedes-Benz Group",k:"min",vot:"9,98%",dt:"2026",st:P,
+  src:"Mercedes-Benz Group AG, Investor Relations, Shareholder structure",
+  url:"https://group.mercedes-benz.com/investors/share/shareholder-structure/",
+  n:"Maggior azionista singolo per diritti di voto. Con Geely la presenza cinese complessiva sfiora il 20%: due gruppi cinesi concorrenti azionisti dello stesso costruttore tedesco."},
+ {s:"Geely",tg:"Mercedes-Benz Group",k:"min",cap:"9,69%",dt:"2026",st:P,
+  src:"Mercedes-Benz Group AG, Investor Relations, Shareholder structure",
+  url:"https://group.mercedes-benz.com/investors/share/shareholder-structure/",
+  n:"Detenuta tramite Tenaciou3 Prospect, veicolo di Li Shufu."},
+ {s:"Kuwait Investment Authority",tg:"Mercedes-Benz Group",k:"min",cap:"~4,97%",dt:"mar 2023",st:S,
+  src:"Luxus Plus, Kuwait's sovereign wealth fund reduces its stake in Mercedes-Benz",
+  url:"https://luxus-plus.com/en/kuwaits-sovereign-wealth-fund-reduces-its-stake-in-mercedes-benz-by-almost-2/",
+  n:"Il piu longevo azionista sovrano, presente dal 1974. Quota ridotta nel marzo 2023 con la vendita di circa 20 milioni di azioni. Molti aggregatori riportano ancora il precedente 6,8%: dato probabilmente obsoleto. Non riconfermato su documento primario."},
+ {s:"Mercedes-Benz Group",tg:"Mercedes-Benz",k:"own",cap:"100%",dt:"2026",st:P,src:"Mercedes-Benz Group AG, Annual Report"},
+ {s:"Mercedes-Benz",tg:"AMG",k:"brand",dt:"2026",st:P,src:"Mercedes-Benz Group AG, Annual Report",
+  n:"Mercedes-AMG GmbH, divisione interna. Non una partecipazione separata."},
+ {s:"Mercedes-Benz",tg:"Maybach",k:"brand",dt:"2026",st:P,src:"Mercedes-Benz Group AG, Annual Report",
+  n:"Linea di allestimento, non entita separata."},
+ {s:"Mercedes-Benz Group",tg:"smart",k:"jv",cap:"50%",dt:"2026",st:P,
+  src:"smart, comunicato sulla costituzione della joint venture con Geely",
+  url:"https://media.smart.com/mercedes-benz-and-geely-holding-formally-established-global-joint-venture-smart-automobile-co-ltd-for-the-smart-brand/",
+  n:"smart Automobile Co., Ltd., costituita nel 2019 con sede a Ningbo. Progettazione e produzione in Cina nel perimetro della joint venture."},
+ {s:"Geely",tg:"smart",k:"jv",cap:"50%",dt:"2026",st:P,
+  src:"smart, comunicato sulla costituzione della joint venture con Geely",
+  url:"https://media.smart.com/mercedes-benz-and-geely-holding-formally-established-global-joint-venture-smart-automobile-co-ltd-for-the-smart-brand/"},
+ {s:"Mercedes-Benz Group",tg:"Daimler Truck",k:"min",cap:"~35%",dt:"12 feb 2026",st:S,
+  src:"MarketScreener, Mercedes-Benz plans to sell portion of Daimler Truck stake",
+  url:"https://www.marketscreener.com/news/mercedes-benz-plans-to-sell-portion-of-daimler-truck-stake-ce7e5ddedc81fe21",
+  n:"Quota residua dopo lo scorporo del dicembre 2021. Il CFO Harald Wilhelm ha annunciato il 12 febbraio 2026 l'intenzione di venderne una parte nel corso del 2026, con dettagli attesi a maggio."},
+
+ {s:"Stefan Quandt",tg:"BMW Group",k:"min",cap:"~25,8%",dt:"2026",st:S,
+  src:"Fonti secondarie concordanti; nessun documento primario unico",
+  n:"Detenuta tramite AQTON. Con Susanne Klatten il controllo familiare combinato e intorno al 46,7%: minoranza qualificata sufficiente al controllo di fatto. La ripartizione precisa varia leggermente tra fonti a seconda che si conteggino le holding intermedie o le partecipazioni personali dirette."},
+ {s:"Susanne Klatten",tg:"BMW Group",k:"min",cap:"~20,9%",dt:"2026",st:S,
+  src:"Fonti secondarie concordanti; nessun documento primario unico"},
+ {s:"BMW Group",tg:"BMW",k:"own",cap:"100%",dt:"2026",st:P,src:"BMW AG, Geschaftsbericht"},
+ {s:"BMW Group",tg:"MINI",k:"own",cap:"100%",dt:"2026",st:P,src:"BMW AG, Geschaftsbericht",
+  n:"Ex Rover Group, entrato nel 2000 dopo lo scioglimento del gruppo britannico."},
+ {s:"BMW Group",tg:"Rolls-Royce Motor Cars",k:"own",cap:"100%",dt:"2026",st:P,src:"BMW AG, Geschaftsbericht",
+  n:"Diritti sul marchio automobilistico acquisiti nel 2003."},
+ {s:"BMW Group",tg:"BMW Motorrad",k:"own",cap:"100%",dt:"2026",st:P,src:"BMW AG, Geschaftsbericht"},
+ {s:"BMW Group",tg:"BMW Brilliance",k:"ctrl",cap:"75%",dt:"feb 2022",st:P,
+  src:"BMW, comunicato sull'aumento della quota in BMW Brilliance",
+  n:"Quota aumentata dal 50% al 75% nel febbraio 2022."},
+ {s:"Rolls-Royce Motor Cars",tg:"Rolls-Royce Holdings plc",k:"none",dt:"—",st:P,
+  src:"Documenti societari di entrambe le societa",
+  n:"Nessun legame azionario. L'omonimia deriva dalla scissione storica dell'azienda: il ramo automobilistico e quello aerospaziale hanno percorsi proprietari del tutto separati."},
+
+ {s:"Renault Group",tg:"Nissan",k:"alli",cap:"35,71% (17,05% diretto + 18,66% in trust)",vot:"cappato al 15%",dt:"FY2025, board 18 feb 2026",st:P,
+  src:"Renault Group, comunicati Nissan's contribution e report FY2025",
+  url:"https://media.renaultgroup.com/evolution-of-the-accounting-treatment-of-renault-groups-stake-in-nissan/",
+  n:"Il 18,66% corrisponde a 693,1 milioni di azioni conferite al trust francese indipendente istituito l'8 novembre 2023, con voto neutralizzato ma beneficio economico conservato. Tre vendite successive hanno ridotto la quota nel trust dal 28,4% iniziale: 211 milioni di azioni nel dicembre 2023, 99,1 milioni nel marzo 2024, 195,5 milioni per 494 milioni di euro nel settembre 2024. La ripartizione risulta invariata da fine 2024. Fino al 2023 Renault deteneva il 43,4% con pieno diritto di voto. Gli accordi originari del novembre 2023 prevedevano anche un impegno di investimento in Ampere, la controllata EV e software di Renault, verosimilmente superato dal ritiro dell'IPO di Ampere nel 2024: lo stato attuale di questa clausola non e stato verificato su fonte primaria."},
+ {s:"Nissan",tg:"Renault Group",k:"alli",cap:"15%",vot:"cappato al 15%",dt:"31 mar 2025",st:P,
+  src:"Nissan, comunicato Renault Group and Nissan announce new strategic projects",
+  url:"https://global.nissannews.com/en/releases/250331-01-e",
+  n:"Fino al 2023 la quota era priva di diritto di voto per effetto della regola francese sulle partecipazioni incrociate. L'amendment del 31 marzo 2025 ha abbassato la soglia minima vincolante di cross-shareholding dal 15% al 10%. Il CEO Ivan Espinosa ha annunciato nel giugno 2025 l'intenzione di scendere al 10%, ma la vendita non risulta eseguita a luglio 2026."},
+ {s:"Nissan",tg:"Mitsubishi Motors",k:"alli",cap:"24,05%",dt:"7-8 nov 2024",st:P,
+  src:"Mitsubishi Motors, Mitsubishi Motors acquires its own shares from Nissan",
+  url:"https://www.mitsubishi-motors.com/en/newsroom/newsrelease/2024/20241107_2.html",
+  n:"Ridotta dal 34,07% tramite un buyback di 149.028.300 azioni, pari al 10,02%, a 460,6 yen per azione per circa 68,6 miliardi di yen. Nissan e cosi scesa sotto la soglia che le garantiva il controllo sulle nomine del consiglio."},
+ {s:"Mitsubishi Corporation",tg:"Mitsubishi Motors",k:"min",cap:"quota rilevante, non quantificata",dt:"2026",st:S,
+  src:"Nessun documento primario individuato in questa ricerca",
+  n:"Mitsubishi Corporation, la trading house del gruppo e entita distinta dal costruttore, mantiene una partecipazione azionaria rilevante in Mitsubishi Motors. La percentuale esatta non e stata verificata su fonte primaria ne nella prima ne nella seconda ricerca: punto di verifica prioritario segnalato in entrambe."},
+ {s:"Honda",tg:"Nissan",k:"hist",dt:"23 dic 2024 - 13 feb 2025",st:S,
+  src:"Carscoops, Nissan to end Honda merger talks",
+  url:"https://www.carscoops.com/2025/02/nissan-ends-merger-talks-with-honda-foxconn-is-back-on-the-table/",
+  n:"Memorandum d'intesa di fusione firmato il 23 dicembre 2024 e collassato il 13 febbraio 2025, per il rifiuto di Nissan di diventare sussidiaria di Honda. Prosegue la collaborazione tecnologica su batterie, software e veicoli elettrici, estesa a Mitsubishi."},
+ {s:"Renault Group",tg:"Renault",k:"own",cap:"100%",dt:"2026",st:P,src:"Renault Group, Document d'enregistrement universel"},
+ {s:"Renault Group",tg:"Dacia",k:"own",cap:"100%",dt:"2026",st:P,src:"Renault Group, Document d'enregistrement universel"},
+ {s:"Renault Group",tg:"Alpine",k:"own",cap:"100%",dt:"2026",st:P,src:"Renault Group, Document d'enregistrement universel"},
+ {s:"Renault Group",tg:"Mobilize",k:"own",cap:"100%",dt:"2026",st:P,src:"Renault Group, Document d'enregistrement universel",
+  n:"Marchio di servizi di mobilita lanciato nel 2021."},
+ {s:"Renault Group",tg:"Ampere",k:"own",cap:"100%",dt:"2026",st:P,src:"Renault Group, Document d'enregistrement universel",
+  n:"Controllata per veicoli elettrici e software creata nel 2023. Il piano di quotazione e stato ritirato nel 2024."},
+ {s:"Mercedes-Benz Group",tg:"Renault Group",k:"hist",cap:"~3,1%",dt:"nov 2021",st:S,
+  src:"Euronews, Daimler unwinds cross-ownership with Renault stake sale",
+  url:"https://www.euronews.com/next/2021/11/11/daimer-renault-stake-sale",
+  n:"Partecipazione incrociata triangolare Daimler-Renault-Nissan intorno al 3,1% reciproco, sciolta nel novembre 2021 con un accelerated bookbuild."},
+
+ {s:"Geely",tg:"Volvo Cars",k:"ctrl",cap:"78,7%",vot:"~82%",dt:"2025",st:S,
+  src:"Stampa finanziaria; quota ridotta dopo la vendita di circa 100 milioni di azioni",
+  n:"La divergenza tra capitale e voto deriva dalla struttura a doppia classe azionaria di Volvo Cars."},
+ {s:"Geely",tg:"Lotus",k:"ctrl",cap:"maggioranza",dt:"2026",st:S,src:"Stampa finanziaria"},
+ {s:"Volvo Cars",tg:"Polestar",k:"min",cap:"18%",dt:"2024",st:P,
+  src:"Volvo Cars, comunicato sulla distribuzione delle azioni Polestar agli azionisti",
+  url:"https://www.volvocars.com/intl/media/press-releases/189C5D9BCA1BE81A/",
+  n:"Volvo Cars ha distribuito il 62,7% della propria partecipazione Polestar ai propri azionisti nel febbraio 2024. Geely mantiene il controllo indiretto per circa l'80% sommando i diversi veicoli d'investimento."},
+ {s:"Geely",tg:"Polestar",k:"ctrl",cap:"controllo indiretto",dt:"2024",st:S,src:"Stampa finanziaria"},
+ {s:"Geely",tg:"Aston Martin",k:"min",cap:"~14%",dt:"mag 2026",st:S,
+  src:"Carscoops, Aston Martin asked for emergency cash for the 8th time",
+  url:"https://www.carscoops.com/2026/05/aston-martin-emergency-cash/",
+  n:"Ridotta dal picco di circa il 17% raggiunto nel maggio 2023. La fonte cita insider e non un filing regolamentare: la partecipazione e storicamente molto volatile. Nello stesso periodo Mercedes sarebbe scesa da circa il 20% a meno dell'8%."},
+ {s:"Yew Tree",tg:"Aston Martin",k:"min",cap:"31%",dt:"mag 2026",st:S,
+  src:"Carscoops, Aston Martin asked for emergency cash for the 8th time",
+  url:"https://www.carscoops.com/2026/05/aston-martin-emergency-cash/",
+  n:"Consorzio guidato da Lawrence Stroll, primo azionista."},
+
+ {s:"Exor",tg:"Ferrari",k:"min",cap:"~21,3%",vot:"~32,3%",dt:"3 gen 2026",st:S,
+  src:"Reuters, Exor renews Ferrari shareholder agreement with founder's son; scomposizione capitale/voto da analisi di settore non primaria",
+  url:"https://www.reuters.com/sustainability/sustainable-finance-reporting/exor-renews-ferrari-shareholder-agreement-with-founders-son-2026-01-03/",
+  n:"Reuters conferma una quota di circa il 20% senza riportare la ripartizione puntuale tra capitale e voto: la scomposizione (21,3% capitale / 32,3% voto) proviene da un'analisi di settore non primaria. Il 3 gennaio 2026 Exor e la famiglia Ferrari hanno rinnovato per un triennio l'accordo di consultazione, sostituendo il patto decennale del 2015: Ferrari ha ottenuto il diritto unilaterale di scioglierlo con 30 giorni di preavviso."},
+ {s:"Piero Ferrari",tg:"Ferrari",k:"min",cap:"~10,7%",vot:"~16,2%",dt:"3 gen 2026",st:S,
+  src:"Reuters, Exor renews Ferrari shareholder agreement with founder's son; scomposizione capitale/voto da analisi di settore non primaria",
+  url:"https://www.reuters.com/sustainability/sustainable-finance-reporting/exor-renews-ferrari-shareholder-agreement-with-founders-son-2026-01-03/",
+  n:"Reuters riporta circa il 10,6% di capitale per Piero Ferrari, secondo maggiore azionista. Insieme a Exor, Trust e famiglia Ferrari restano vicini alla soglia OPA obbligatoria del 30% dei diritti di voto secondo il diritto olandese."},
+
+ {s:"AB Industrivarden",tg:"Volvo Group",k:"min",cap:"~9,6%",dt:"31 dic 2025",st:S,
+  src:"Aggregatore azionario champsignal.com su dati Volvo Group; pagina ufficiale Volvo Group Investor Relations non estraibile in questa ricerca",
+  url:"https://www.volvogroup.com/en/investors/the-volvo-share/ownership-information.html",
+  n:"Indicato come maggiore azionista singolo per capitale. La struttura a doppia classe (azioni A da un voto, azioni B da un decimo di voto) concentra il potere di voto rispetto al capitale, ma la ripartizione precisa dei diritti di voto di Industrivarden e degli altri grandi azionisti svedesi (sfera Wallenberg/Investor AB) non e stata confermata su fonte primaria in questa ricerca. Circa il 5,5-5,6% del capitale risulterebbe detenuto da investitori con base in Cina secondo la ripartizione geografica di MarketScreener: dato aggregato per paese, non un singolo azionista identificato."},
+ {s:"Volvo Group",tg:"Volvo Trucks",k:"own",cap:"100%",dt:"2025",st:S,src:"Volvo Group, sito istituzionale"},
+ {s:"Volvo Group",tg:"Mack Trucks",k:"own",cap:"100%",dt:"2025",st:S,src:"Volvo Group, sito istituzionale",n:"Marchio statunitense, parte di Volvo Group dal 2000."},
+ {s:"Volvo Group",tg:"Volvo Buses",k:"own",cap:"100%",dt:"2025",st:S,src:"Volvo Group, sito istituzionale"},
+ {s:"Volvo Group",tg:"Renault Trucks",k:"own",cap:"100%",dt:"2001-2025",st:S,
+  src:"Nota storica di settore consolidata; transazione RVI del 2001",
+  n:"Volvo Group ha rilevato Renault Veicoli Industriali (RVI) nel 2001, ricevendo in cambio Renault SA una quota di circa il 15% in Volvo Group, dismessa gradualmente negli anni successivi. Il marchio Renault Trucks non ha piu alcun legame azionario con Renault Group: uno dei pochi casi del grafo in cui il nome del marchio sopravvive alla cessione totale della proprieta."},
+ {s:"Renault Group",tg:"Renault Trucks",k:"hist",dt:"2001",st:S,
+  src:"Nota storica di settore consolidata; transazione RVI del 2001",
+  n:"Renault Veicoli Industriali (RVI) venduta a Volvo Group nel 2001. Renault SA ricevette in cambio una quota in Volvo Group, poi dismessa: relazione oggi del tutto cessata."},
+
+ {s:"Exor",tg:"Iveco Group",k:"min",cap:"27,1%",vot:"43,1%",dt:"lug 2025",st:S,
+  src:"Reuters / Yahoo Finance, Agnellis in talks over Iveco sale, Tata Motors has made approach",
+  url:"https://www.reuters.com/world/india/agnellis-talks-over-iveco-sale-tata-motors-has-made-approach-sources-say-2025-07-18/",
+  n:"Quota ereditata proporzionalmente dal demerger di CNH Industrial del gennaio 2022. E la stessa quota che Exor sta vendendo a Tata Motors: vedi l'arco successivo."},
+ {s:"Tata Motors",tg:"Iveco Group",k:"min",cap:"offerta pubblica di acquisto in corso su tutte le azioni",dt:"annuncio 30 lug 2025, chiusura prevista T3 2026",st:S,
+  src:"Iveco Group, comunicato Tata Motors to Acquire Iveco Group; stampa finanziaria su stato della chiusura",
+  url:"https://www.ivecogroup.com/media/corporate_press_releases/2025/july/tata_motors_to_acquire_iveco_group_together_creating_a_global_player_in_commercial_vehicles",
+  n:"Operazione da circa 3,8 miliardi di euro, tender offer volontaria interamente in contanti a 14,1 euro per azione, esclusa la divisione difesa. Precondizione: la vendita del business difesa di Iveco a Leonardo S.p.A. per 1,7 miliardi di euro. Golden Power italiano concesso il 31 ottobre 2025. Al momento della stesura la chiusura non risulta ancora completata con certezza: alcune fonti secondarie di basso profilo la definiscono gia conclusa, ma le fonti piu solide indicano una chiusura attesa nel terzo trimestre 2026. Punto da riverificare."},
+ {s:"Iveco Group",tg:"Iveco",k:"own",cap:"100%",dt:"2025",st:S,src:"Iveco Group, sito istituzionale"},
+ {s:"Iveco Group",tg:"IVECO Bus",k:"own",cap:"100%",dt:"2025",st:S,src:"Iveco Group, sito istituzionale"},
+ {s:"Iveco Group",tg:"FPT Industrial",k:"own",cap:"100%",dt:"2025",st:S,src:"Iveco Group, sito istituzionale"},
+
+ {s:"Rimac Group",tg:"Bugatti Rimac",k:"ctrl",cap:"55%",dt:"2021-2026",st:S,
+  src:"Wikipedia, Bugatti Rimac; Porsche Newsroom, Porsche sells its stakes in Bugatti Rimac and Rimac Group",
+  url:"https://en.wikipedia.org/wiki/Bugatti_Rimac",
+  n:"Quota salita al controllo pieno dopo l'uscita di Porsche AG nell'aprile 2026."},
+ {s:"Porsche AG",tg:"Bugatti Rimac",k:"hist",cap:"45%",dt:"2021 - 24 apr 2026",st:S,
+  src:"Porsche Newsroom, Porsche sells its stakes in Bugatti Rimac and Rimac Group to an international consortium",
+  url:"https://newsroom.porsche.com/en/2026/company/porsche-bugatti-rimac-stakes-42221.html",
+  n:"Joint venture costituita nel 2021 tra Porsche e Rimac Group. Porsche ha venduto la propria quota del 45% a un consorzio guidato da HOF Capital il 24 aprile 2026, uscendo interamente dal capitale insieme alla quota del 20,6% in Rimac Group: relazione oggi cessata."},
+ {s:"Porsche AG",tg:"Rimac Group",k:"hist",cap:"20,6%",dt:"2021 - 24 apr 2026",st:S,
+  src:"Porsche Newsroom, Porsche sells its stakes in Bugatti Rimac and Rimac Group to an international consortium",
+  url:"https://newsroom.porsche.com/en/2026/company/porsche-bugatti-rimac-stakes-42221.html"},
+
+ {s:"Mumtalakat",tg:"McLaren Group",k:"ctrl",cap:"100%",dt:"mar 2024",st:S,
+  src:"BBC, Bahrain takes full control of supercar brand McLaren; AGBI, Bahraini fund takes control of British carmaker McLaren",
+  url:"https://www.bbc.com/news/business-68639320",
+  n:"Mumtalakat era azionista di McLaren dal 2007, quando acquisto una quota del 30% dagli azionisti fondatori. Ha raggiunto il controllo totale nel marzo 2024 con la conversione delle azioni privilegiate."},
+ {s:"McLaren Group",tg:"McLaren Automotive",k:"own",cap:"100%",dt:"2024",st:S,src:"McLaren Group, sito istituzionale"},
+ {s:"McLaren Group",tg:"McLaren Racing",k:"own",dt:"2024-2025",st:S,
+  src:"McLaren, comunicato sul consolidamento della struttura azionaria",
+  url:"https://www.mclaren.com/racing/latest-news/2025/mclaren-racing-consolidates-shareholder-structure/",
+  n:"Nel settembre 2025 Mumtalakat e CYVN Holdings hanno acquistato tutte le azioni dei soci minoritari di McLaren Racing (MSP Sports Capital), diventandone proprietari insieme a McLaren Group."},
+ {s:"CYVN Holdings",tg:"McLaren Racing",k:"min",dt:"set 2025",st:S,
+  src:"BBC, McLaren Racing valued at £3.5bn after ownership change",
+  url:"https://www.bbc.com/sport/formula1/articles/cwypy6zpr39o",
+  n:"CYVN Holdings, fondo di Abu Dhabi gia azionista di NIO, ha acquisito una quota di minoranza in McLaren Racing insieme a Mumtalakat, rilevando le azioni di MSP Sports Capital."},
+
+ {s:"Tata Motors",tg:"Jaguar Land Rover",k:"own",cap:"100%",dt:"2008-2026",st:S,
+  src:"Nota di settore consolidata; nessuna verifica puntuale su fonte primaria in questa ricerca",
+  n:"Tata Motors ha rilevato Jaguar e Land Rover da Ford nel 2008. Il dato di controllo totale e un fatto ampiamente consolidato ma non riverificato su un filing specifico in questa sessione."},
+ {s:"Jaguar Land Rover",tg:"Jaguar",k:"brand",dt:"2026",st:S,src:"Jaguar Land Rover, sito istituzionale"},
+ {s:"Jaguar Land Rover",tg:"Land Rover",k:"brand",dt:"2026",st:S,src:"Jaguar Land Rover, sito istituzionale"},
+
+ {s:"Hyundai Motor Group",tg:"Rimac Group",k:"min",cap:"~12%",dt:"2019-2026",st:S,
+  src:"Comunicati Hyundai Motor Group e stampa di settore sull'investimento del 2019 in Rimac",
+  n:"Nel 2019 Hyundai Motor e Kia investirono insieme circa 80 milioni di euro in Rimac. La quota combinata, intorno al 12 per cento, e sopravvissuta alla riorganizzazione del 2021 che ha creato Bugatti Rimac. Ripartizione esatta non riverificata su fonte primaria in questa ricerca."},
+ {s:"Volkswagen Group",tg:"Xpeng",k:"min",cap:"~5%",dt:"2023-2026",st:S,
+  src:"Stampa finanziaria sull'investimento Volkswagen in XPeng del luglio 2023",
+  n:"Volkswagen ha investito circa 700 milioni di dollari per una quota intorno al 5 per cento e la co-progettazione di piattaforme elettriche per il mercato cinese. Quota non riverificata su documento primario in questa ricerca."},
+ {s:"Volkswagen Group",tg:"Ford",k:"alli",dt:"2019-2026",st:S,
+  src:"Comunicati Volkswagen e Ford sull'alleanza; stampa di settore",
+  n:"Alleanza senza scambio azionario. Ford costruisce le elettriche Explorer e Capri sulla piattaforma MEB di Volkswagen e i due gruppi condividono i pickup Ranger e Amarok. La joint venture sulla guida autonoma Argo AI e stata chiusa nel 2022 e da allora la cooperazione si e ristretta agli accordi gia avviati."},
+ {s:"BMW Group",tg:"Toyota",k:"alli",dt:"2013-2026",st:S,
+  src:"Comunicati BMW e Toyota sulla cooperazione; stampa di settore",
+  n:"Cooperazione senza scambio azionario. Piattaforma sportiva condivisa (BMW Z4 e Toyota Supra) e sviluppo congiunto di sistemi a celle a combustibile a idrogeno, rilanciato nel 2024-2025."},
+ {s:"Stellantis",tg:"Toyota",k:"alli",dt:"2016-2026",st:S,
+  src:"Comunicati Stellantis, ex PSA, e Toyota sulla fornitura di veicoli commerciali",
+  n:"Accordo di fornitura senza scambio azionario. I van Toyota Proace e Proace City sono versioni rimarchiate dei veicoli commerciali Stellantis, su base ex piattaforma PSA, con produzione condivisa in Europa."},
+ {s:"Exor",tg:"CNH Industrial",k:"min",cap:"~26,9%",vot:"~42,5%",dt:"2026",st:S,
+  src:"Exor N.V. e documenti azionari CNH Industrial; ripartizione capitale/voto non riverificata su filing primario puntuale in questa ricerca",
+  n:"Exor e l'azionista di riferimento e di controllo di fatto di CNH Industrial grazie alle azioni a voto speciale (loyalty), con potere di voto molto superiore alla quota di capitale: la stessa struttura presente in Stellantis e Ferrari. CNH e la societa da cui Iveco Group e stata scorporata nel gennaio 2022."},
+
+ {s:"Horacio Pagani",tg:"Pagani",k:"ctrl",cap:"100%",dt:"2026",st:S,
+  src:"Nota di settore consolidata; Pagani Automobili e societa non quotata a controllo familiare",
+  n:"Pagani e interamente controllata dal fondatore e dalla sua famiglia: nessun azionista esterno noto."},
+ {s:"Christian von Koenigsegg",tg:"Koenigsegg",k:"ctrl",cap:"maggioranza",dt:"2026",st:S,
+  src:"Nota di settore consolidata; Koenigsegg Automotive AB e societa non quotata",
+  n:"Il fondatore mantiene il controllo di maggioranza. Ripartizione esatta del capitale non pubblica."},
+ {s:"NEVS",tg:"Koenigsegg",k:"hist",cap:"20%",dt:"2019-2022",st:S,
+  src:"Stampa di settore sull'accordo Koenigsegg-NEVS del 2019 e sul successivo crollo di Evergrande",
+  n:"Nel 2019 NEVS, controllata da Evergrande, investi circa 150 milioni di dollari per il 20% di Koenigsegg piu una joint venture per un'auto elettrica accessibile. La relazione e di fatto decaduta con la crisi di Evergrande: stato legale della quota non chiaro, trattato qui come relazione cessata."},
+ {s:"INEOS",tg:"Ineos Automotive",k:"own",cap:"100%",dt:"2026",st:S,
+  src:"Nota di settore consolidata; Ineos Automotive e divisione del gruppo INEOS",
+  n:"Ineos Automotive e la divisione auto interamente controllata dal gruppo chimico INEOS."},
+ {s:"Mahindra",tg:"Automobili Pininfarina",k:"own",cap:"100%",dt:"2026",st:S,
+  src:"Nota di settore consolidata; Automobili Pininfarina e controllata Mahindra",
+  n:"Automobili Pininfarina GmbH e interamente controllata da Mahindra, distinta dalla casa di design Pininfarina S.p.A. (Mahindra circa 76%)."},
+ {s:"Investindustrial",tg:"Morgan",k:"ctrl",cap:"maggioranza",dt:"2019-2026",st:S,
+  src:"Comunicati e stampa di settore sull'acquisizione Morgan da parte di Investindustrial nel 2019",
+  n:"Investindustrial ha rilevato la maggioranza di Morgan nel 2019; la famiglia Morgan e i dipendenti conservano una minoranza. Ripartizione esatta non pubblica."},
+ {s:"Investindustrial",tg:"Aston Martin",k:"hist",cap:"~37,5%",dt:"2013-2020",st:S,
+  src:"Stampa finanziaria sull'investimento Investindustrial in Aston Martin del 2013 e sulla successiva uscita",
+  n:"Investindustrial investi circa 150 milioni di sterline in Aston Martin nel 2013 per una quota intorno al 37,5%, poi progressivamente ridotta fino all'uscita con l'arrivo del consorzio Yew Tree di Lawrence Stroll: relazione oggi cessata."},
+ {s:"Saudi PIF",tg:"Aston Martin",k:"min",cap:"~16%",dt:"2024-2026",st:S,
+  src:"Stampa finanziaria sull'ingresso del Public Investment Fund in Aston Martin nel 2022 e sui successivi aumenti di capitale",
+  n:"Il fondo sovrano saudita e entrato nel 2022 come secondo maggiore azionista con circa il 16-18% e seggi nel consiglio. La quota puo essere variata con i numerosi aumenti di capitale di Aston Martin: valore non riverificato su filing regolamentare in questa ricerca."},
+ {s:"Mercedes-Benz Group",tg:"Aston Martin",k:"min",cap:"<8%",dt:"mag 2026",st:S,
+  src:"Carscoops e stampa di settore sulla partnership tecnologica Mercedes-Aston Martin e sulla diluizione della quota",
+  n:"Mercedes-Benz fornisce ad Aston Martin motori AMG e tecnologia elettrica ed elettronica in cambio di azioni. La quota, un tempo destinata a salire fino al 20%, e stata progressivamente diluita a meno dell'8% dai numerosi aumenti di capitale."}
+];
+
+const ST={
+ g:{r:24,f:"var(--g-f)",s:"var(--g-s)",c:"var(--g-t)",fs:10.5,dash:null},
+ h:{r:17,f:"var(--h-f)",s:"var(--h-s)",c:"var(--h-t)",fs:9.5,dash:null},
+ b:{r:10,f:"var(--b-f)",s:"var(--b-s)",c:"var(--b-t)",fs:8.5,dash:null},
+ i:{r:14,f:"var(--i-f)",s:"var(--i-s)",c:"var(--i-t)",fs:9,dash:null},
+ e:{r:13,f:"var(--e-f)",s:"var(--e-s)",c:"var(--e-t)",fs:9,dash:null},
+ x:{r:14,f:"var(--d-f)",s:"var(--d-s)",c:"var(--d-t)",fs:9,dash:"3,3"}
+};
+const ES={
+ own:{st:"var(--line)",dash:null,w:1.1}, ctrl:{st:"var(--line)",dash:null,w:1.9},
+ brand:{st:"var(--line)",dash:null,w:0.8}, min:{st:"var(--alli)",dash:"5,4",w:1.2},
+ jv:{st:"var(--alli)",dash:"5,4",w:1.7}, alli:{st:"var(--alli)",dash:"6,3",w:1.8},
+ hist:{st:"var(--hist)",dash:"2,3",w:1}, none:{st:"var(--none)",dash:"1,4",w:1}
+};
+const KL={own:"Proprietà piena",ctrl:"Controllo di maggioranza",brand:"Marchio interno",
+ min:"Partecipazione di minoranza",jv:"Joint venture",alli:"Alleanza o cooperazione industriale",
+ hist:"Relazione cessata o fallita",none:"Nessuna relazione"};
+
+const byId=new Map(N.map(d=>[d.id,d]));
+const links=L.map(d=>({...d,source:d.s,target:d.tg,divg:!!(d.cap&&d.vot)}));
+N.forEach(n=>{n.deg=links.filter(l=>l.s===n.id||l.tg===n.id).length});
+// Marca i nodi che NON appartengono alla componente connessa principale del grafo
+// (cluster indipendenti come Pagani, Koenigsegg, Ineos Automotive, Pininfarina):
+// ricevono una centratura piu forte per restare dentro la viewBox, senza pero
+// comprimere o squadrare la rete principale, che mantiene un layout organico.
+(function(){
+ const adj=new Map(N.map(n=>[n.id,[]]));
+ links.forEach(l=>{adj.get(l.s).push(l.tg);adj.get(l.tg).push(l.s)});
+ const seen=new Set(); let best=new Set();
+ N.forEach(n=>{
+  if(seen.has(n.id))return;
+  const comp=new Set(),stack=[n.id];
+  while(stack.length){const id=stack.pop();if(comp.has(id))continue;comp.add(id);seen.add(id);(adj.get(id)||[]).forEach(x=>{if(!comp.has(x))stack.push(x)})}
+  if(comp.size>best.size)best=comp;
+ });
+ N.forEach(n=>{n.iso=!best.has(n.id)});
+})();
+
+// Se un nodo e nascosto dai filtri (tipicamente un'entita storica come PSA/FCA)
+// e ha un campo "pt" (pass-through), gli archi verso i suoi figli si ricollegano
+// visivamente al nodo indicato da pt, invece di isolarsi.
+function hiddenByFilters(n){
+ if(n.t==="i"&&!f_inv.checked)return true;
+ if(n.t==="e"&&!f_ext.checked)return true;
+ if(n.t==="x"&&!f_hist.checked)return true;
+ return false;
+}
+function resolveEnd(id){
+ let n=byId.get(id),guard=0;
+ while(n&&hiddenByFilters(n)&&n.pt&&guard++<8) n=byId.get(n.pt);
+ return n||byId.get(id);
+}
+
+const W=900,H=860;
+const svg=d3.select("#canvas");
+const gZoom=svg.append("g").attr("class","zoom-layer");
+const gL=gZoom.append("g"),gE=gZoom.append("g"),gN=gZoom.append("g");
+
+const zoom=d3.zoom().scaleExtent([0.35,6])
+ .on("zoom",(e)=>{gZoom.attr("transform",e.transform)});
+svg.call(zoom);
+document.getElementById("z-in").addEventListener("click",()=>svg.transition().duration(200).call(zoom.scaleBy,1.4));
+document.getElementById("z-out").addEventListener("click",()=>svg.transition().duration(200).call(zoom.scaleBy,1/1.4));
+document.getElementById("z-rst").addEventListener("click",()=>svg.transition().duration(300).call(zoom.transform,d3.zoomIdentity));
+
+const link=gL.selectAll("line.e").data(links).join("line").attr("class","e")
+ .attr("stroke",d=>ES[d.k].st).attr("stroke-width",d=>ES[d.k].w)
+ .attr("stroke-dasharray",d=>ES[d.k].dash).style("cursor","pointer")
+ .on("click",(e,d)=>{e.stopPropagation();showEdge(d)});
+
+const ring=gL.selectAll("line.r").data(links.filter(d=>d.divg)).join("line").attr("class","r")
+ .attr("stroke","var(--hi)").attr("stroke-width",3.5).attr("opacity",.3)
+ .style("pointer-events","none");
+
+const elab=gE.selectAll("text").data(links).join("text").attr("class","el")
+ .attr("text-anchor","middle")
+ .text(d=>d.vot&&d.cap?(d.cap.length>14?"cap/voto":d.cap+" / "+d.vot):(d.cap||"")).style("opacity",0);
+
+const node=gN.selectAll("g").data(N).join("g").style("cursor","pointer")
+ .on("click",(e,d)=>{e.stopPropagation();showNode(d)})
+ .call(d3.drag().on("start",ds).on("drag",dm).on("end",de));
+
+node.append("circle").attr("r",d=>ST[d.t].r).attr("fill",d=>ST[d.t].f)
+ .attr("stroke",d=>ST[d.t].s).attr("stroke-width",1.3)
+ .attr("stroke-dasharray",d=>ST[d.t].dash);
+node.append("text").attr("class","nl").attr("text-anchor","middle")
+ .attr("dy",d=>ST[d.t].r+10).attr("fill",d=>ST[d.t].c)
+ .style("font-size",d=>ST[d.t].fs+"px").text(d=>d.id);
+
+const DEF={cen:.30,rep:1,lnk:.5,dis:1};
+let F={...DEF};
+
+const baseDist=d=>d.k==="brand"?40:d.k==="own"?56:d.k==="hist"?115:95;
+const baseChg=d=>d.t==="g"?-1000:d.t==="h"?-560:-240;
+
+const fLink=d3.forceLink(links).id(d=>d.id)
+ .distance(d=>baseDist(d)*F.dis).strength(d=>F.lnk);
+const fChg=d3.forceManyBody().strength(d=>baseChg(d)*F.rep);
+const fCen=d3.forceCenter(W/2,H/2).strength(F.cen);
+
+const sim=d3.forceSimulation(N)
+ .force("link",fLink)
+ .force("charge",fChg)
+ .force("center",fCen)
+ .force("x",d3.forceX(W/2).strength(d=>d.iso?.22:.05))
+ .force("y",d3.forceY(H/2).strength(d=>d.iso?.22:.05))
+ .force("collide",d3.forceCollide().radius(d=>ST[d.t].r+22))
+ .on("tick",tick);
+
+function tick(){
+ link.attr("x1",d=>resolveEnd(d.s).x).attr("y1",d=>resolveEnd(d.s).y)
+     .attr("x2",d=>resolveEnd(d.tg).x).attr("y2",d=>resolveEnd(d.tg).y);
+ ring.attr("x1",d=>resolveEnd(d.s).x).attr("y1",d=>resolveEnd(d.s).y)
+     .attr("x2",d=>resolveEnd(d.tg).x).attr("y2",d=>resolveEnd(d.tg).y);
+ elab.attr("x",d=>(resolveEnd(d.s).x+resolveEnd(d.tg).x)/2).attr("y",d=>(resolveEnd(d.s).y+resolveEnd(d.tg).y)/2-3);
+ node.attr("transform",d=>`translate(${d.x},${d.y})`);
+}
+function ds(e,d){if(!e.active)sim.alphaTarget(.3).restart();d.fx=d.x;d.fy=d.y}
+function dm(e,d){d.fx=e.x;d.fy=e.y}
+function de(e,d){if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null}
+
+const det=document.getElementById("detail");
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;")}
+function stag(t){return t===P?'<span class="tag t-prim">Fonte primaria</span>':'<span class="tag t-sec">Fonte secondaria</span>'}
+
+function showEdge(d){
+ clearHi(); hiEdge(d);
+ let h=`<p class="dt">${esc(d.s)} → ${esc(d.tg)}</p><table>`;
+ h+=`<tr><td class="k">Tipo</td><td>${KL[d.k]}</td></tr>`;
+ if(d.cap) h+=`<tr><td class="k">Capitale</td><td>${esc(d.cap)}</td></tr>`;
+ if(d.vot) h+=`<tr><td class="k">Diritti di voto</td><td>${esc(d.vot)}</td></tr>`;
+ if(d.dt) h+=`<tr><td class="k">Data del dato</td><td>${esc(d.dt)}</td></tr>`;
+ h+=`</table><div style="margin-top:7px">${stag(d.st)}</div>`;
+ if(d.divg) h+=`<div class="divg">Capitale e diritti di voto divergono. Rappresentarli con un unico numero produrrebbe un grafo formalmente pulito ma sostanzialmente fuorviante.</div>`;
+ if(d.n) h+=`<p style="margin:8px 0 0;font-size:11.5px">${esc(d.n)}</p>`;
+ if(d.src) h+=`<div class="src">${esc(d.src)}${d.url?`<br><a href="${d.url}" target="_blank" rel="noopener">Apri il documento</a>`:""}</div>`;
+ det.innerHTML=h;
+}
+function showNode(d){
+ clearHi(); hiNode(d);
+ const inn=links.filter(l=>l.tg===d.id), out=links.filter(l=>l.s===d.id);
+ let h=`<p class="dt">${esc(d.id)}</p>`;
+ if(d.d) h+=`<p style="margin:0 0 9px;font-size:11.5px">${esc(d.d)}</p>`;
+ const fmt=l=>l.vot?`${l.cap||"—"} cap / ${l.vot} voti`:(l.cap||KL[l.k]);
+ if(inn.length){
+  h+=`<div style="font-size:11px;color:var(--muted);margin:8px 0 3px">Partecipato da</div><table>`;
+  inn.forEach(l=>{h+=`<tr><td class="k">${esc(l.s)}</td><td>${esc(fmt(l))}</td></tr>`});
+  h+=`</table>`;
+ }
+ if(out.length){
+  h+=`<div style="font-size:11px;color:var(--muted);margin:9px 0 3px">Partecipa in</div><table>`;
+  out.forEach(l=>{h+=`<tr><td class="k">${esc(l.tg)}</td><td>${esc(fmt(l))}</td></tr>`});
+  h+=`</table>`;
+ }
+ h+=`<div class="src">Connessioni totali: ${d.deg}</div>`;
+ det.innerHTML=h;
+}
+function clearHi(){node.selectAll("circle").attr("stroke-width",1.3);link.attr("opacity",1);node.attr("opacity",1)}
+function hiEdge(d){link.attr("opacity",l=>l===d?1:.1);node.attr("opacity",n=>(n.id===d.s||n.id===d.tg)?1:.22)}
+function hiNode(d){
+ const rel=new Set([d.id]);
+ links.forEach(l=>{if(l.s===d.id)rel.add(l.tg);if(l.tg===d.id)rel.add(l.s)});
+ link.attr("opacity",l=>(l.s===d.id||l.tg===d.id)?1:.09);
+ node.attr("opacity",n=>rel.has(n.id)?1:.2);
+ node.filter(n=>n.id===d.id).selectAll("circle").attr("stroke-width",3);
+}
+svg.on("click",()=>{clearHi();
+ det.innerHTML=`<p class="dt">Dettaglio</p><p class="hint">Seleziona un nodo o un arco. Gli archi con alone arancione sono quelli dove il capitale e i diritti di voto divergono.</p>`});
+
+function flt(){
+ const si=f_inv.checked,se=f_ext.checked,sh=f_hist.checked,sl=f_lab.checked,sd=f_divg.checked,snq=f_nq.checked;
+ // Quando "solo costruttori non quotati" e attivo, mostra ESCLUSIVAMENTE i
+ // costruttori privati marcati (n.nq). I proprietari non vengono inclusi: alcuni
+ // (es. Porsche AG, Hyundai, Mahindra) sono a loro volta quotati e comparire in
+ // questa vista li farebbe sembrare erroneamente non quotati.
+ let nqSet=null;
+ if(snq){
+  nqSet=new Set();
+  N.forEach(n=>{if(n.nq)nqSet.add(n.id)});
+ }
+ const vn=id=>{const t=byId.get(id).t;
+  if(t==="i"&&!si)return false; if((t==="e")&&!se)return false;
+  if(t==="x"&&!sh)return false;
+  if(snq&&!nqSet.has(id))return false; return true};
+ // Un arco resta visibile se, dopo aver risolto ciascun estremo nascosto tramite
+ // pass-through (n.pt: es. PSA/FCA -> Stellantis), entrambi gli estremi risolti
+ // sono visibili e distinti: cosi i marchi restano collegati anche a filtro attivo.
+ const vl=l=>{
+  const es=resolveEnd(l.s).id, et=resolveEnd(l.tg).id;
+  if(!vn(es)||!vn(et)||es===et) return false;
+  return (sh||l.k!=="hist")&&(!sd||l.divg);
+ };
+ const keep=new Set(); links.forEach(l=>{if(vl(l)){keep.add(l.s);keep.add(l.tg)}});
+ node.style("display",d=>(vn(d.id)&&(!sd||keep.has(d.id)))?null:"none");
+ link.style("display",l=>vl(l)?null:"none");
+ ring.style("display",l=>vl(l)?null:"none");
+ elab.style("opacity",l=>(sl&&vl(l))?1:0);
+ // La geometria di link/ring/etichette (posizioni x1/y1/x2/y2) viene calcolata
+ // solo dentro tick(), che pero smette di essere chiamato quando la simulazione
+ // si e raffreddata. Senza questa chiamata, dopo il primo utilizzo i pass-through
+ // (resolveEnd) restano congelati alla posizione dell'ultimo tick eseguito e i
+ // click successivi ai filtri non aggiornano piu i collegamenti visivi.
+ tick();
+}
+const fmtN=v=>v.toFixed(2).replace(".",",");
+const sEl={cen:document.getElementById("s-cen"),rep:document.getElementById("s-rep"),
+           lnk:document.getElementById("s-lnk"),dis:document.getElementById("s-dis")};
+const vEl={cen:document.getElementById("v-cen"),rep:document.getElementById("v-rep"),
+           lnk:document.getElementById("v-lnk"),dis:document.getElementById("v-dis")};
+
+function applyForces(kick){
+ fCen.strength(F.cen);
+ fChg.strength(d=>baseChg(d)*F.rep);
+ fLink.distance(d=>baseDist(d)*F.dis).strength(d=>F.lnk);
+ Object.keys(vEl).forEach(k=>vEl[k].textContent=fmtN(F[k]));
+ sim.alpha(kick===false?.15:.5).restart();
+}
+Object.keys(sEl).forEach(k=>{
+ sEl[k].addEventListener("input",e=>{F[k]=+e.target.value;applyForces()});
+});
+document.getElementById("s-rst").addEventListener("click",()=>{
+ F={...DEF};
+ Object.keys(sEl).forEach(k=>sEl[k].value=DEF[k]);
+ N.forEach(n=>{n.fx=null;n.fy=null});
+ applyForces();
+});
+applyForces(false);
+
+["f-inv","f-ext","f-hist","f-lab","f-divg","f-nq"].forEach(id=>document.getElementById(id).addEventListener("change",flt));
+const f_inv=document.getElementById("f-inv"),f_ext=document.getElementById("f-ext"),
+      f_hist=document.getElementById("f-hist"),f_lab=document.getElementById("f-lab"),
+      f_divg=document.getElementById("f-divg"),f_nq=document.getElementById("f-nq");
+flt();
+</script>
+</body>
+</html>
