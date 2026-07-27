@@ -25,7 +25,7 @@ press) as of July 2026.
 
 ## Files
 
-- `gruppi_automobilistici_rete_EN.html` — the interactive graph (English).
+- `index.html` — the interactive graph (English).
 - `gruppi_automobilistici_integrato_EN.md` — the underlying research/notes in
   document form.
 - `archive/` — earlier Italian-language drafts and source research.
