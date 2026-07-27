@@ -812,10 +812,12 @@ function flt(){
   nqSet=new Set();
   N.forEach(n=>{if(n.nq)nqSet.add(n.id)});
  }
- const vn=id=>{const t=byId.get(id).t;
+ const vn=id=>{
+  if(snq) return nqSet.has(id);
+  const t=byId.get(id).t;
   if(t==="i"&&!si)return false; if((t==="e")&&!se)return false;
   if(t==="x"&&!sh)return false;
-  if(snq&&!nqSet.has(id))return false; return true};
+  return true};
  // An edge stays visible if, after resolving each hidden endpoint through the
  // pass-through (n.pt: e.g. PSA/FCA -> Stellantis), both resolved endpoints are
  // visible and distinct: this keeps the brands connected even with the filter on.
