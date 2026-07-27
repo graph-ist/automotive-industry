@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Ownership network of automotive groups — July 2026</title>
+<title>Automotive Industry — Ownership Network — July 2026</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <style>
   :root{
     --bg:#fff; --text:#1a1a1a; --muted:#6b6b66; --panel:#F1EFE8; --pline:#D3D1C7;
-    --line:#b4b2a9; --alli:#993C1D; --hist:#888780; --none:#B4B2A9;
+    --line:#b4b2a9; --alli:#993C1D; --coop:#2A5C8A; --hist:#888780; --none:#B4B2A9;
     --g-f:#FAECE7; --g-s:#993C1D; --g-t:#4A1B0C;
     --h-f:#E1F5EE; --h-s:#0F6E56; --h-t:#04342C;
     --b-f:#F1EFE8; --b-s:#5F5E5A; --b-t:#2C2C2A;
@@ -19,7 +19,7 @@
   @media (prefers-color-scheme:dark){
     :root{
       --bg:#1c1c1a; --text:#f1efe8; --muted:#b4b2a9; --panel:#2C2C2A; --pline:#444441;
-      --line:#5f5e5a; --alli:#F0997B; --hist:#888780; --none:#5F5E5A;
+      --line:#5f5e5a; --alli:#F0997B; --coop:#82B6E0; --hist:#888780; --none:#5F5E5A;
       --g-f:#4A1B0C; --g-s:#F0997B; --g-t:#F5C4B3;
       --h-f:#04342C; --h-s:#5DCAA5; --h-t:#9FE1CB;
       --b-f:#444441; --b-s:#B4B2A9; --b-t:#D3D1C7;
@@ -30,27 +30,37 @@
     }
   }
   *{box-sizing:border-box}
-  body{margin:0;padding:20px 16px 48px;background:var(--bg);color:var(--text);
+  html,body{height:100%}
+  body{margin:0;padding:0;background:var(--bg);color:var(--text);overflow:hidden;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;line-height:1.5}
-  h1{font-size:20px;font-weight:500;margin:0 0 4px;text-align:center}
-  .sub{text-align:center;font-size:12.5px;color:var(--muted);margin:0 0 6px}
-  .stamp{text-align:center;font-size:11.5px;color:var(--muted);margin:0 0 16px}
-  .layout{max-width:1240px;margin:0 auto;display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
-  .cv{flex:1 1 660px;min-width:320px;position:relative}
-  .zoom-ctrls{position:absolute;top:8px;right:8px;z-index:2;display:flex;flex-direction:column;gap:4px}
+  h1{position:absolute;top:14px;left:16px;z-index:3;font-size:14px;font-weight:500;margin:0;
+    background:var(--panel);padding:7px 12px;border-radius:8px;box-shadow:0 2px 5px rgba(0,0,0,.10)}
+  .stamp{font-size:11.5px;color:var(--muted);margin:6px 0 0;font-style:italic}
+  .layout{position:fixed;inset:0}
+  .cv{position:absolute;inset:0}
+  .zoom-ctrls{position:absolute;bottom:16px;left:16px;z-index:2;display:flex;flex-direction:column;gap:4px}
   .zoom-ctrls button{width:28px;height:28px;border-radius:6px;border:0.5px solid var(--pline);
     background:var(--panel);color:var(--text);font-size:15px;line-height:1;font-family:inherit;
     cursor:pointer;display:flex;align-items:center;justify-content:center}
   .zoom-ctrls button:hover{color:var(--hi);border-color:var(--hi)}
-  .side{flex:0 0 300px;display:flex;flex-direction:column;gap:12px}
-  .card{background:var(--panel);border-radius:12px;padding:12px 14px;font-size:12px}
+  .side{position:absolute;top:10px;right:10px;z-index:3;width:min(312px,calc(100vw - 20px));
+    max-height:calc(100vh - 20px);overflow-y:auto;overflow-x:hidden;padding:6px;box-sizing:border-box;
+    display:flex;flex-direction:column;gap:10px}
+  .card{background:var(--panel);border-radius:12px;padding:12px 14px;font-size:12px;
+    box-shadow:0 2px 5px rgba(0,0,0,.10);flex-shrink:0}
   .card h3{font-size:12px;font-weight:500;margin:0 0 8px}
+  .card summary{font-size:12px;font-weight:500;margin:0;cursor:pointer;list-style:none;
+    display:flex;align-items:center;justify-content:space-between}
+  .card summary::-webkit-details-marker{display:none}
+  .card summary::after{content:"\25B8";font-size:10px;color:var(--muted);margin-left:6px}
+  details.card[open] summary{margin-bottom:8px}
+  details.card[open] summary::after{content:"\25BE"}
   .row{display:flex;align-items:center;gap:8px;margin-bottom:5px}
   .dot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
   .es{width:22px;height:0;border-top-width:2px;flex-shrink:0}
   .ctrl{display:flex;align-items:center;gap:7px;margin-bottom:6px;cursor:pointer;user-select:none}
   .ctrl input{margin:0;cursor:pointer}
-  svg{width:100%;height:auto;display:block;touch-action:none}
+  svg{width:100%;height:100%;display:block;touch-action:none}
   .nl{font-size:9.5px;pointer-events:none}
   .el{font-size:8px;fill:var(--muted);pointer-events:none}
   #detail{min-height:190px}
@@ -85,39 +95,52 @@
 </head>
 <body>
 
-<h1>Ownership network of automotive groups</h1>
-<p class="sub">Click a node or an edge for capital, voting rights, data date and source</p>
-<p class="stamp">Data verified against primary sources, July 2026. Each edge states whether the source is a corporate document or the press.</p>
-<p class="stamp">Zoom with the wheel or the +/− buttons, drag the background to pan, double-click to zoom on a point.</p>
-
 <div class="layout">
+  <h1>Automotive Industry — Ownership Network</h1>
   <div class="cv">
     <div class="zoom-ctrls">
       <button id="z-in" title="Zoom in" type="button">+</button>
       <button id="z-out" title="Zoom out" type="button">−</button>
       <button id="z-rst" title="Reset view" type="button">&#8634;</button>
     </div>
-    <svg id="canvas" viewBox="0 0 900 860"></svg>
+    <svg id="canvas"></svg>
   </div>
   <div class="side">
 
     <div class="card" id="detail">
       <p class="dt">Detail</p>
       <p class="hint">Select a node or an edge. The edges with an orange halo are those where capital and voting rights diverge.</p>
+      <p class="stamp">Data verified against primary sources, July 2026. Each edge states whether the source is a corporate document or the press.</p>
     </div>
 
-    <div class="card">
-      <h3>Filters</h3>
+    <details class="card" open>
+      <summary>Nodes &amp; edges legend</summary>
+      <div class="row"><span class="dot" style="background:var(--g-f);border:1.5px solid var(--g-s)"></span>Parent group</div>
+      <div class="row"><span class="dot" style="background:var(--h-f);border:1.5px solid var(--h-s)"></span>Holding or sub-holding</div>
+      <div class="row"><span class="dot" style="background:var(--b-f);border:1.5px solid var(--b-s)"></span>Brand</div>
+      <div class="row"><span class="dot" style="background:var(--i-f);border:1.5px solid var(--i-s)"></span>Shareholder</div>
+      <div class="row"><span class="dot" style="background:var(--e-f);border:1.5px solid var(--e-s)"></span>External entity or partner</div>
+      <div class="row"><span class="dot" style="background:var(--d-f);border:1.5px dashed var(--d-s)"></span>Extinct or failed entity</div>
+      <h3 style="margin-top:12px">Edges</h3>
+      <div class="row"><span class="es" style="border-top-style:solid;border-color:var(--line)"></span>Ownership or control</div>
+      <div class="row"><span class="es" style="border-top-style:dashed;border-color:var(--alli)"></span>Minority stake or joint venture</div>
+      <div class="row"><span class="es" style="border-top-style:dashed;border-color:var(--coop)"></span>Alliance or cooperation</div>
+      <div class="row"><span class="es" style="border-top-style:dotted;border-color:var(--hist)"></span>Ended or failed</div>
+      <div class="note">The orange halo marks the edges where <em>capital</em> and <em>voting rights</em> diverge. Representing them with a single number would be misleading. The "Isolate capital/vote divergence cases" filter (in the Filters panel) shows only this subset.</div>
+    </details>
+
+    <details class="card">
+      <summary>Filters</summary>
       <label class="ctrl"><input type="checkbox" id="f-inv" checked>Shareholders and investors</label>
       <label class="ctrl"><input type="checkbox" id="f-ext" checked>External entities and partners</label>
       <label class="ctrl"><input type="checkbox" id="f-hist" checked>Ended or failed relationships</label>
       <label class="ctrl"><input type="checkbox" id="f-lab">Percentage labels on edges</label>
-      <label class="ctrl"><input type="checkbox" id="f-divg">Only edges with capital/vote divergence</label>
+      <label class="ctrl"><input type="checkbox" id="f-divg">Isolate capital/vote divergence cases</label>
       <label class="ctrl"><input type="checkbox" id="f-nq">Only unlisted carmakers</label>
-    </div>
+    </details>
 
-    <div class="card">
-      <h3>Forces</h3>
+    <details class="card">
+      <summary>Forces</summary>
       <div class="sl">
         <div class="lb"><span>Centering strength</span><span id="v-cen">0.30</span></div>
         <input type="range" id="s-cen" min="0" max="1" step="0.02" value="0.30">
@@ -135,25 +158,10 @@
         <input type="range" id="s-dis" min="0.3" max="2.5" step="0.05" value="1">
       </div>
       <button class="rst" id="s-rst">Reset to defaults</button>
-    </div>
+    </details>
 
-    <div class="card">
-      <h3>Nodes</h3>
-      <div class="row"><span class="dot" style="background:var(--g-f);border:1.5px solid var(--g-s)"></span>Parent group</div>
-      <div class="row"><span class="dot" style="background:var(--h-f);border:1.5px solid var(--h-s)"></span>Holding or sub-holding</div>
-      <div class="row"><span class="dot" style="background:var(--b-f);border:1.5px solid var(--b-s)"></span>Brand</div>
-      <div class="row"><span class="dot" style="background:var(--i-f);border:1.5px solid var(--i-s)"></span>Shareholder</div>
-      <div class="row"><span class="dot" style="background:var(--e-f);border:1.5px solid var(--e-s)"></span>External entity or partner</div>
-      <div class="row"><span class="dot" style="background:var(--d-f);border:1.5px dashed var(--d-s)"></span>Extinct or failed entity</div>
-      <h3 style="margin-top:12px">Edges</h3>
-      <div class="row"><span class="es" style="border-top-style:solid;border-color:var(--line)"></span>Ownership or control</div>
-      <div class="row"><span class="es" style="border-top-style:dashed;border-color:var(--alli)"></span>Minority, JV, alliance</div>
-      <div class="row"><span class="es" style="border-top-style:dotted;border-color:var(--hist)"></span>Ended or failed</div>
-      <div class="note">The orange halo marks the edges where <em>capital</em> and <em>voting rights</em> diverge. Representing them with a single number would be misleading.</div>
-    </div>
-
-    <div class="card">
-      <h3>Timeline of verified facts</h3>
+    <details class="card">
+      <summary>Timeline of verified facts</summary>
       <ul class="tl">
         <li><span class="dd">Jan 2021</span><span>PSA and FCA are extinguished in the Stellantis merger</span></li>
         <li><span class="dd">Dec 2021</span><span>Daimler Truck spun off; Daimler-Renault-Nissan cross-holding unwound</span></li>
@@ -176,14 +184,14 @@
         <li><span class="dd">24 Apr 2026</span><span>Porsche sells its stakes in Bugatti Rimac and Rimac Group</span></li>
         <li><span class="dd">May 2026</span><span>FaSTLAne plan: no Stellantis brand closed</span></li>
       </ul>
-    </div>
+    </details>
 
-    <div class="card">
-      <h3>Open points</h3>
+    <details class="card">
+      <summary>Open points</summary>
       <div style="font-size:11.5px;line-height:1.55">
         Nissan's reduction in Renault from 15% to 10% remains a declared but unexecuted intention. The Kuwait Investment Authority stake in Mercedes and the Quandt split in BMW have no single primary document. Geely's stake in Aston Martin comes from the press, not a filing. Volkswagen's stake in Traton (about 90%) and Mitsubishi Corporation's stake in Mitsubishi Motors are not confirmed on a primary source in either research. Lower Saxony's capital stake in Volkswagen (about 11.8%) remains an estimate not precisely re-checked. The capital/vote split of Exor and of Piero Ferrari in Ferrari (respectively about 21.3%/32.3% and 10.7%/16.2%) comes from an industry analysis, not an Exor or Ferrari filing. The split of voting rights of AB Industrivarden and of the Wallenberg sphere in AB Volvo was not confirmed on a primary source. The closing status of the Iveco Group acquisition by Tata Motors is ambiguous among the sources consulted as of July 2026: some indicate it as already concluded, most indicate it still expected in the third quarter of 2026. Tata Motors' total control of Jaguar Land Rover since 2008 is established industry knowledge, not re-verified against a filing in this session.
       </div>
-    </div>
+    </details>
 
   </div>
 </div>
@@ -643,7 +651,7 @@ const ST={
 const ES={
  own:{st:"var(--line)",dash:null,w:1.1}, ctrl:{st:"var(--line)",dash:null,w:1.9},
  brand:{st:"var(--line)",dash:null,w:0.8}, min:{st:"var(--alli)",dash:"5,4",w:1.2},
- jv:{st:"var(--alli)",dash:"5,4",w:1.7}, alli:{st:"var(--alli)",dash:"6,3",w:1.8},
+ jv:{st:"var(--alli)",dash:"1,3",w:1.9}, alli:{st:"var(--coop)",dash:"6,3",w:1.8},
  hist:{st:"var(--hist)",dash:"2,3",w:1}, none:{st:"var(--none)",dash:"1,4",w:1}
 };
 const KL={own:"Full ownership",ctrl:"Majority control",brand:"Internal brand",
@@ -685,8 +693,8 @@ function resolveEnd(id){
  return n||byId.get(id);
 }
 
-const W=900,H=860;
-const svg=d3.select("#canvas");
+let W=window.innerWidth,H=window.innerHeight;
+const svg=d3.select("#canvas").attr("viewBox",`0 0 ${W} ${H}`);
 const gZoom=svg.append("g").attr("class","zoom-layer");
 const gL=gZoom.append("g"),gE=gZoom.append("g"),gN=gZoom.append("g");
 
@@ -708,7 +716,7 @@ const ring=gL.selectAll("line.r").data(links.filter(d=>d.divg)).join("line").att
 
 const elab=gE.selectAll("text").data(links).join("text").attr("class","el")
  .attr("text-anchor","middle")
- .text(d=>d.vot&&d.cap?(d.cap.length>14?"cap/voto":d.cap+" / "+d.vot):(d.cap||"")).style("opacity",0);
+ .text(d=>d.vot&&d.cap?(d.cap.length>14?"cap/voto":d.cap+" / "+d.vot):(d.cap||"")).style("display","none");
 
 const node=gN.selectAll("g").data(N).join("g").style("cursor","pointer")
  .on("click",(e,d)=>{e.stopPropagation();showNode(d)})
@@ -731,13 +739,30 @@ const fLink=d3.forceLink(links).id(d=>d.id)
  .distance(d=>baseDist(d)*F.dis).strength(d=>F.lnk);
 const fChg=d3.forceManyBody().strength(d=>baseChg(d)*F.rep);
 const fCen=d3.forceCenter(W/2,H/2).strength(F.cen);
+const fX=d3.forceX(W/2).strength(d=>d.iso?.22:.05);
+const fY=d3.forceY(H/2).strength(d=>d.iso?.22:.05);
+
+// Seed initial node positions on the same golden-angle spiral d3 uses by
+// default, but centered on the actual viewport (W/2,H/2) instead of the
+// origin. Now that the canvas is the full browser window (potentially much
+// larger than the old fixed 900x860), leaving the default origin-centered
+// seed would force the whole cluster to "travel" a long distance at low
+// starting alpha, and it would get stuck bunched up in the top-left corner
+// before the simulation cools down.
+(function(){
+ const gAngle=Math.PI*(3-Math.sqrt(5));
+ N.forEach((n,i)=>{
+  const r=10*Math.sqrt(0.5+i),a=i*gAngle;
+  n.x=W/2+r*Math.cos(a); n.y=H/2+r*Math.sin(a);
+ });
+})();
 
 const sim=d3.forceSimulation(N)
  .force("link",fLink)
  .force("charge",fChg)
  .force("center",fCen)
- .force("x",d3.forceX(W/2).strength(d=>d.iso?.22:.05))
- .force("y",d3.forceY(H/2).strength(d=>d.iso?.22:.05))
+ .force("x",fX)
+ .force("y",fY)
  .force("collide",d3.forceCollide().radius(d=>ST[d.t].r+22))
  .on("tick",tick);
 
@@ -789,17 +814,24 @@ function showNode(d){
  h+=`<div class="src">Total connections: ${d.deg}</div>`;
  det.innerHTML=h;
 }
-function clearHi(){node.selectAll("circle").attr("stroke-width",1.3);link.attr("opacity",1);node.attr("opacity",1)}
-function hiEdge(d){link.attr("opacity",l=>l===d?1:.1);node.attr("opacity",n=>(n.id===d.s||n.id===d.tg)?1:.22)}
+function clearHi(){node.selectAll("circle").attr("stroke-width",1.3);link.attr("opacity",1);node.attr("opacity",1);ring.attr("opacity",.3);elab.attr("opacity",1)}
+function hiEdge(d){
+ link.attr("opacity",l=>l===d?1:.1);
+ node.attr("opacity",n=>(n.id===d.s||n.id===d.tg)?1:.22);
+ ring.attr("opacity",l=>l===d?.3:.03);
+ elab.attr("opacity",l=>l===d?1:.1);
+}
 function hiNode(d){
  const rel=new Set([d.id]);
  links.forEach(l=>{if(l.s===d.id)rel.add(l.tg);if(l.tg===d.id)rel.add(l.s)});
  link.attr("opacity",l=>(l.s===d.id||l.tg===d.id)?1:.09);
  node.attr("opacity",n=>rel.has(n.id)?1:.2);
+ ring.attr("opacity",l=>(l.s===d.id||l.tg===d.id)?.3:.03);
+ elab.attr("opacity",l=>(l.s===d.id||l.tg===d.id)?1:.09);
  node.filter(n=>n.id===d.id).selectAll("circle").attr("stroke-width",3);
 }
 svg.on("click",()=>{clearHi();
- det.innerHTML=`<p class="dt">Detail</p><p class="hint">Select a node or an edge. The edges with an orange halo are those where capital and voting rights diverge.</p>`});
+ det.innerHTML=`<p class="dt">Detail</p><p class="hint">Select a node or an edge. The edges with an orange halo are those where capital and voting rights diverge.</p><p class="stamp">Data verified against primary sources, July 2026. Each edge states whether the source is a corporate document or the press.</p>`});
 
 function flt(){
  const si=f_inv.checked,se=f_ext.checked,sh=f_hist.checked,sl=f_lab.checked,sd=f_divg.checked,snq=f_nq.checked;
@@ -827,10 +859,18 @@ function flt(){
   return (sh||l.k!=="hist")&&(!sd||l.divg);
  };
  const keep=new Set(); links.forEach(l=>{if(vl(l)){keep.add(l.s);keep.add(l.tg)}});
- node.style("display",d=>(vn(d.id)&&(!sd||keep.has(d.id)))?null:"none");
+ // A node stays visible only if it still has at least one visible edge after
+ // filtering (keep), otherwise unchecking a type filter (investors, external
+ // entities, historical) leaves its former counterpart floating with no edges
+ // ("loose" node): e.g. hiding external entities would hide Ineos Automotive
+ // but leave INEOS itself stranded, since that was its only link.
+ // Exception: "only unlisted carmakers" intentionally drops owner edges to
+ // avoid implying listed parents (Porsche AG, Hyundai, Mahindra...) are
+ // themselves unlisted, so isolated nodes are expected in that view.
+ node.style("display",d=>(vn(d.id)&&(snq||keep.has(d.id)))?null:"none");
  link.style("display",l=>vl(l)?null:"none");
  ring.style("display",l=>vl(l)?null:"none");
- elab.style("opacity",l=>(sl&&vl(l))?1:0);
+ elab.style("display",l=>(sl&&vl(l))?null:"none");
  // The geometry of links/rings/labels (x1/y1/x2/y2 positions) is computed
  // only inside tick(), which however stops being called once the simulation
  // has cooled down. Without this call, after the first use the pass-throughs
@@ -867,6 +907,21 @@ const f_inv=document.getElementById("f-inv"),f_ext=document.getElementById("f-ex
       f_hist=document.getElementById("f-hist"),f_lab=document.getElementById("f-lab"),
       f_divg=document.getElementById("f-divg"),f_nq=document.getElementById("f-nq");
 flt();
+
+// The canvas fills the browser viewport: on resize, re-fit the coordinate
+// system (viewBox, center forces) to the new window size and gently reheat
+// the simulation so nodes re-center without a jarring jump.
+let resizeT;
+window.addEventListener("resize",()=>{
+ clearTimeout(resizeT);
+ resizeT=setTimeout(()=>{
+  W=window.innerWidth; H=window.innerHeight;
+  svg.attr("viewBox",`0 0 ${W} ${H}`);
+  fCen.x(W/2).y(H/2);
+  fX.x(W/2); fY.y(H/2);
+  sim.alpha(0.3).restart();
+ },150);
+});
 </script>
 </body>
 </html>
