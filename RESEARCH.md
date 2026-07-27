@@ -1,5 +1,7 @@
 # Shareholder and ownership structure of the main European automotive groups — integrated version (July 2026)
 
+> **↩ [Back to README](README.md)** · **[Live interactive graph](https://graph-ist.github.io/automotive-industry/)**
+
 > **Note on the provenance of this document.** This file integrates two previous pieces of research on the same subject:
 > - **Research A** (without web-tool access — data estimated from model knowledge alone, widely marked "TO BE VERIFIED");
 > - **Research B** (with web_search/web_fetch operational — data verified against primary sources with URL and consultation date).

@@ -7,6 +7,9 @@ press) as of July 2026.
 
 **Live page:** https://graph-ist.github.io/automotive-industry/
 
+**Full research & methodology:** [RESEARCH.md](RESEARCH.md) — sourcing notes,
+revision history, and caveats behind every figure in the graph.
+
 ## What it shows
 
 - **Parent groups, holdings, brands, shareholders and external partners** as
@@ -26,9 +29,9 @@ press) as of July 2026.
 ## Files
 
 - `index.html` — the interactive graph (English).
-- `gruppi_automobilistici_integrato_EN.md` — the underlying research/notes in
-  document form.
-- `archive/` — earlier Italian-language drafts and source research.
+- `RESEARCH.md` — the underlying research notes, sourcing and methodology.
+- `archive/` — earlier Italian-language drafts and source research (kept
+  locally, git-ignored).
 
 ## Tech
 
